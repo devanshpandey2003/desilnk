@@ -1,0 +1,30 @@
+/* Extra styles for the health concerns page — matches reference design */
+
+/* Keep symptoms text gray and clean, not colored */
+.concern-card--health .concern-card-text span {
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  /* override webkit clamp from concerns.css so all symptoms show */
+  overflow: visible;
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  -webkit-box-orient: unset;
+}
+
+/* Slightly bigger icon circle with soft pink bg */
+.concern-card--health .concern-card-icon {
+  background: #fef2f2;
+  width: 44px;
+  height: 44px;
+  margin-top: 1px;
+}
+
+/* Title style */
+.concern-card--health .concern-card-text strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}

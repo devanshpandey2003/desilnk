@@ -1,0 +1,389 @@
+/* ───── Create Account Page ───── */
+.create-account {
+  min-height: 100vh;
+  background: #fff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.create-account-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Progress bar */
+.progress-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  display: flex;
+  overflow: hidden;
+}
+
+.progress-bar-done {
+  background: #1e3a8a;
+  border-radius: 3px 0 0 3px;
+}
+
+.progress-bar-remaining {
+  background: #ff8c00;
+  flex: 1;
+  border-radius: 0 3px 3px 0;
+}
+
+.step-label {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin-top: 16px;
+}
+
+/* Centered form area */
+.form-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.form-area h1 {
+  font-size: 25px;
+  font-weight: 700;
+  color: #111;
+  text-align: center;
+  margin: 0;
+}
+
+.form-area .subtitle {
+  font-size: 16px;
+  color: #9ca3af;
+  text-align: center;
+  margin: 8px 0 30px;
+}
+
+/* Input groups */
+.input-group {
+  margin-bottom: 24px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  color: #111;
+  margin-bottom: 8px;
+}
+
+.input-box {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 16px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #111;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #fff;
+}
+
+.input-box::placeholder {
+  color: #c0c4cc;
+}
+
+.input-box:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+/* Phone row */
+.phone-row {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.phone-row:focus-within {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.country-picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: none;
+  border-right: 1px solid #d1d5db;
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+  font-family: inherit;
+  color: #111;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.country-picker-btn:hover {
+  background: #f9fafb;
+}
+
+.country-picker-btn .flag {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.country-picker-btn .code {
+  font-weight: 500;
+}
+
+.country-picker-btn .arrow {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-left: 2px;
+}
+
+.phone-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  font-size: 15px;
+  font-family: inherit;
+  color: #111;
+  outline: none;
+  background: transparent;
+}
+
+.phone-input::placeholder {
+  color: #c0c4cc;
+}
+
+/* Terms text */
+.terms-text {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  margin: 10px 0 0;
+  line-height: 1.6;
+}
+
+.terms-text a {
+  color: #8b5cf6;
+  text-decoration: underline;
+}
+
+/* Continue button */
+.btn-continue {
+  width: 100%;
+  padding: 16px 0;
+  margin-top: 30px;
+  border: none;
+  border-radius: 12px;
+  background: #8b5cf6;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.btn-continue:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
+}
+
+.btn-continue:disabled {
+  background: #d1d5db;
+  color: #fff;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.bottom-divider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 20px 0;
+}
+
+/* Back button */
+.btn-back {
+  display: block;
+  margin: 0 auto;
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  color: #374151;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.btn-back:hover {
+  color: #111;
+}
+
+/* ───── Country Picker Modal ───── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+}
+
+.modal-search {
+  padding: 16px;
+}
+
+.modal-search input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") no-repeat 12px center;
+  transition: border-color 0.2s;
+}
+
+.modal-search input:focus {
+  border-color: #8b5cf6;
+}
+
+.country-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.country-list li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+
+.country-list li:hover {
+  background: #f9fafb;
+}
+
+.country-list li.selected {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.country-list li .flag {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.country-list li .name {
+  flex: 1;
+  font-size: 15px;
+  color: #111;
+}
+
+.country-list li.selected .name {
+  font-weight: 600;
+}
+
+.country-list li .dial-code {
+  font-size: 15px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.country-list li.selected .dial-code {
+  color: #8b5cf6;
+}
+
+/* ───── Responsive ───── */
+@media (min-width: 640px) {
+  .modal-sheet {
+    border-radius: 20px;
+    margin: auto;
+    max-height: 520px;
+  }
+
+  .modal-overlay {
+    align-items: center;
+  }
+}

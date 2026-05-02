@@ -1,0 +1,235 @@
+.mr-layout {
+  display: flex;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+}
+
+/* ── Left panel ── */
+.mr-left {
+  width: 40%;
+  background: #1a4fd4;
+  color: #fff;
+  padding: 60px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+}
+
+.mr-left h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.mr-left p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.88;
+  margin: 0;
+}
+
+.mr-features {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mr-features li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.mr-feature-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ── Right panel ── */
+.mr-right {
+  flex: 1;
+  padding: 60px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  overflow-y: auto;
+}
+
+.mr-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0 0 4px;
+}
+
+/* Fields */
+.mr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mr-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a1f36;
+}
+
+.mr-field input,
+.mr-field select {
+  padding: 11px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1a1f36;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #fff;
+}
+
+.mr-field input:focus,
+.mr-field select:focus {
+  border-color: #1a4fd4;
+}
+
+
+/* Gender */
+.mr-gender-row {
+  display: flex;
+  gap: 12px;
+}
+
+.mr-gender-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.mr-gender-option input[type="radio"] {
+  accent-color: #1a4fd4;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.mr-gender-option.selected {
+  border-color: #1a4fd4;
+  background: #eff4ff;
+  color: #1a4fd4;
+}
+
+/* DOB row */
+.mr-dob-row {
+  display: flex;
+  gap: 10px;
+}
+
+.mr-dob-row select {
+  flex: 1;
+}
+
+/* Terms */
+.mr-terms {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.mr-terms input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #1a4fd4;
+  flex-shrink: 0;
+}
+
+.mr-terms a {
+  color: #1a4fd4;
+  text-decoration: underline;
+}
+
+/* Error */
+.mr-error {
+  font-size: 0.85rem;
+  color: #dc2626;
+  margin: 0;
+}
+
+/* Field hint */
+.mr-field-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Submit */
+.mr-submit {
+  width: 100%;
+  padding: 14px;
+  background: #1a4fd4;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  margin-top: 4px;
+}
+
+.mr-submit:hover:not(:disabled) {
+  background: #1540b0;
+}
+
+.mr-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mr-layout {
+    flex-direction: column;
+  }
+
+  .mr-left {
+    width: 100%;
+    padding: 40px 24px;
+  }
+
+  .mr-right {
+    padding: 32px 24px;
+  }
+
+  .mr-gender-row {
+    flex-direction: column;
+  }
+}

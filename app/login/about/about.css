@@ -1,0 +1,108 @@
+/* ───── About Yourself Page ───── */
+.about-page {
+  min-height: 100vh;
+  background: #fff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.about-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Form Area */
+.about-form-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.about-form-area h1 {
+  font-size: 25px;
+  font-weight: 700;
+  color: #111;
+  text-align: center;
+  margin: 0;
+}
+
+.about-form-area .subtitle {
+  font-size: 16px;
+  color: #9ca3af;
+  text-align: center;
+  margin: 8px 0 30px;
+}
+
+/* Selection inputs */
+.about-input-group {
+  margin-bottom: 24px;
+}
+
+.about-input-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111;
+  margin-bottom: 8px;
+}
+
+.about-input-box {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px; /* Following flutter mockup border radius 8 */
+  font-size: 15px;
+  font-family: inherit;
+  color: #111;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #fff;
+}
+
+.about-input-box::placeholder {
+  color: #c0c4cc;
+}
+
+.about-input-box:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+/* Country selector dropdown box */
+.country-selector-box {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.country-selector-box:hover {
+  border-color: #9ca3af;
+}
+
+.country-selector-box .flag {
+  font-size: 20px;
+  line-height: 1;
+  margin-right: 12px;
+}
+
+.country-selector-box .name {
+  flex: 1;
+  font-size: 16px;
+  color: #111;
+}
+
+.country-selector-box .arrow {
+  color: #6b7280;
+  font-size: 12px;
+}

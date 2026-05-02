@@ -1,0 +1,490 @@
+/* app/consultancy/doctors/book/book.css */
+
+.booking-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 80vh;
+}
+
+/* Header */
+.booking-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.booking-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* Step Indicator */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.step-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.step-dot.active {
+  background: #0d4b85;
+  color: white;
+  box-shadow: 0 4px 12px rgba(13, 75, 133, 0.3);
+}
+
+.step-dot.done {
+  background: #10b981;
+  color: white;
+}
+
+.step-line {
+  flex: 1;
+  height: 3px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+.step-line.done {
+  background: #10b981;
+}
+
+.step-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Doctor Summary Card at top */
+.doctor-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #eef4fb, #f0f7ff);
+  border: 1px solid #d4e4f7;
+  border-radius: 12px;
+  margin-bottom: 28px;
+}
+
+.doc-sum-avatar {
+  width: 56px;
+  height: 56px;
+  background: #d4e4f7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.doc-sum-info h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.doc-sum-info p {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.doc-sum-fee {
+  margin-left: auto;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0d4b85;
+}
+
+/* Date Chips */
+.section-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.date-chips {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 28px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.date-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 72px;
+}
+
+.date-chip:hover {
+  border-color: #0d4b85;
+  background: #f0f7ff;
+}
+
+.date-chip.selected {
+  border-color: #0d4b85;
+  background: #0d4b85;
+  color: white;
+}
+
+.date-chip .day-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}
+
+.date-chip .day-num {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.date-chip .month {
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Slot Groups */
+.slots-section {
+  margin-bottom: 28px;
+}
+
+.slot-group {
+  margin-bottom: 20px;
+}
+
+.slot-group-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slot-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.slot-chip {
+  padding: 10px 18px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slot-chip:hover {
+  border-color: #0d4b85;
+  background: #f0f7ff;
+}
+
+.slot-chip.selected {
+  border-color: #0d4b85;
+  background: #0d4b85;
+  color: white;
+}
+
+.slot-chip.unavailable {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.no-slots {
+  padding: 28px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #e2e8f0;
+}
+
+/* Patient Form */
+.patient-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 500px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 12px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #0d4b85;
+  box-shadow: 0 0 0 3px rgba(13, 75, 133, 0.08);
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 12px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  color: #64748b;
+}
+
+.mode-btn:hover {
+  border-color: #94a3b8;
+}
+
+.mode-btn.active {
+  border-color: #0d4b85;
+  background: #eef4fb;
+  color: #0d4b85;
+}
+
+/* Confirmation Summary */
+.confirm-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.confirm-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 20px;
+}
+
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+}
+
+.confirm-row:last-child {
+  border-bottom: none;
+}
+
+.confirm-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.confirm-value {
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Action Buttons */
+.booking-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.btn-back-step {
+  padding: 14px 28px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back-step:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.btn-next-step {
+  flex: 1;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 10px;
+  background: #0d4b85;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-next-step:hover {
+  background: #0a3a69;
+}
+
+.btn-next-step:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Success / Error States */
+.booking-result {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.result-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-icon.success {
+  background: #d1fae5;
+  color: #10b981;
+}
+
+.result-icon.error {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.booking-result h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+
+.booking-result p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0 0 24px;
+}
+
+.btn-go-home {
+  padding: 14px 36px;
+  border: none;
+  border-radius: 10px;
+  background: #0d4b85;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-go-home:hover {
+  background: #0a3a69;
+}
+
+/* Loading */
+.slots-loading {
+  padding: 32px;
+  text-align: center;
+  color: #64748b;
+}
+
+.slots-loading .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #0d4b85;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Animations */
+.animate-in {
+  animation: fadeSlideIn 0.35s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}

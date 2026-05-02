@@ -1,0 +1,134 @@
+/* ───── Verify Number Page ───── */
+.verify-page {
+  min-height: 100vh;
+  background: #fff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.verify-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* reuse progress bar from login.css — same classes */
+
+.verify-form-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.verify-form-area h1 {
+  font-size: 25px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+}
+
+.verify-subtitle {
+  font-size: 16px;
+  color: #9ca3af;
+  margin: 12px 0 0;
+  line-height: 1.6;
+}
+
+.verify-subtitle .phone-highlight {
+  color: #111;
+  font-weight: 500;
+}
+
+/* OTP code boxes */
+.otp-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 40px 0 24px;
+}
+
+.otp-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #111;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  caret-color: #8b5cf6;
+}
+
+.otp-box:focus {
+  border-color: #8b5cf6;
+  border-width: 2px;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+/* Verify button */
+.btn-verify {
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  border-radius: 12px;
+  background: #8b5cf6;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.btn-verify:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
+}
+
+.btn-verify:disabled {
+  background: #d1d5db;
+  color: #fff;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Resend section */
+.resend-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.resend-timer {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.resend-alt {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.resend-alt a {
+  color: #8b5cf6;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.resend-alt a:hover {
+  text-decoration: underline;
+}
+
+/* divider + back — reuse from login.css */
