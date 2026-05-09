@@ -77,3 +77,15 @@ export const useAppointmentDetails = (appointmentId) => {
     enabled: !!appointmentId,
   });
 };
+
+export const useRescheduleConsultation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ appointmentId, data }) =>
+      AppointmentService.rescheduleConsultation(appointmentId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["slots"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment"] });
+    },
+  });
+};

@@ -5,9 +5,21 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDoctors, useSlots, useBookConsultation, useGenerateToken } from "../../../hooks/useApi";
 import { getPatientId } from "../../../lib/getPatientId";
+import { AppointmentService } from "../../../services/appointment.service";
 import "../doctors.css";
 
 /* ─── Helpers ─── */
+function isAppointmentMissed(apt) {
+  if (!apt) return false;
+  if (["CANCELLED", "COMPLETED"].includes(apt.appointmentStatus)) return false;
+  const dateStr = apt.appointmentDate;
+  const endTime = apt.appointmentEndTime;
+  if (!dateStr || !endTime) return false;
+  const endDateTime = new Date(`${dateStr}T${endTime}:00`);
+  return new Date() > endDateTime;
+}
+
+/* ─── Other Helpers ─── */
 function getNextDays(count = 7) {
   const days = [];
   const now = new Date();
@@ -163,6 +175,25 @@ export default function DoctorDetailPage({ params: paramsPromise }) {
       }
 
       const email = localStorage.getItem("userEmail") || "";
+
+      // Block booking if there is an active (non-missed) appointment
+      const storedAptId = email ? localStorage.getItem(`meradocAppointmentId_${email}`) : null;
+      if (storedAptId) {
+        try {
+          const aptRes = await AppointmentService.getAppointmentDetails(storedAptId);
+          const apt = aptRes?.data;
+          const INACTIVE = ["CANCELLED", "COMPLETED"];
+          if (apt && !INACTIVE.includes(apt.appointmentStatus) && !isAppointmentMissed(apt)) {
+            setBookingResult({
+              type: "error",
+              message: `You already have an active appointment (${apt.appointmentId}). Please cancel or reschedule it from your profile before booking a new one.`,
+            });
+            return;
+          }
+        } catch (_) {
+          // If lookup fails, proceed with booking
+        }
+      }
 
       const response = await bookConsultation({
         appointmentType: "NORMAL",

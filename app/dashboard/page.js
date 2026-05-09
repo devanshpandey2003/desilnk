@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AppointmentService } from "../../services/appointment.service";
 import { UserService } from "../../services/user.service";
 import { getPatientId } from "../../lib/getPatientId";
 import "./dashboard.css";
@@ -68,36 +67,15 @@ export default function Dashboard() {
 
   const [meradocLoading, setMeradocLoading] = useState(false);
 
-  const [activeAppointmentError, setActiveAppointmentError] = useState("");
-
   const handleMeraDocEntry = async () => {
     setMeradocLoading(true);
-    setActiveAppointmentError("");
     try {
-      const email = localStorage.getItem("userEmail") || "";
-      const appointmentKey = email ? `meradocAppointmentId_${email}` : null;
-      const existingAppointmentId = appointmentKey ? localStorage.getItem(appointmentKey) : null;
-
       await UserService.generateToken();
-
       const patientId = await getPatientId();
-
       if (!patientId) {
         router.push("/meradoc-register");
         return;
       }
-
-      if (existingAppointmentId) {
-        const response = await AppointmentService.getAppointmentDetails(existingAppointmentId);
-        const status = response?.data?.appointmentStatus;
-        const INACTIVE = ["CANCELLED", "COMPLETED"];
-        if (status && !INACTIVE.includes(status)) {
-          setActiveAppointmentError(`You already have an active appointment (${response?.data?.appointmentId}). Please complete or cancel it before booking a new one.`);
-          setMeradocLoading(false);
-          return;
-        }
-      }
-
       router.push("/consultancy");
     } catch (err) {
       console.error("MeraDoc entry failed:", err);
@@ -197,19 +175,6 @@ export default function Dashboard() {
                     {meradocLoading ? "Loading..." : "Find a Doctor"}
                     {!meradocLoading && Icons.external}
                   </button>
-                  {activeAppointmentError && (
-                    <div style={{ marginTop: "10px" }}>
-                      <p style={{ fontSize: "0.8rem", color: "#dc2626", lineHeight: 1.4, margin: "0 0 6px" }}>
-                        {activeAppointmentError}
-                      </p>
-                      <Link
-                        href={`/consultancy/appointment/${typeof window !== "undefined" ? localStorage.getItem(`meradocAppointmentId_${localStorage.getItem("userEmail")}`) || "" : ""}`}
-                        style={{ fontSize: "0.8rem", color: "#1a4fd4", textDecoration: "underline" }}
-                      >
-                        View active appointment
-                      </Link>
-                    </div>
-                  )}
                 </div>
               </div>
 

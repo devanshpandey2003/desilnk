@@ -5,7 +5,43 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserAPI } from "../../../lib/api";
 import { AppointmentService } from "../../../services/appointment.service";
+import { useSlots, useRescheduleConsultation } from "../../../hooks/useApi";
 import "./profile.css";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function isAppointmentMissed(apt) {
+  if (!apt) return false;
+  if (["CANCELLED", "COMPLETED"].includes(apt.appointmentStatus)) return false;
+  const dateStr = apt.appointmentDate;
+  const endTime = apt.appointmentEndTime;
+  if (!dateStr || !endTime) return false;
+  const endDateTime = new Date(`${dateStr}T${endTime}:00`);
+  return new Date() > endDateTime;
+}
+
+function getNextDays(count = 7) {
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return {
+      dateStr: d.toISOString().split("T")[0],
+      label: i === 0 ? "Today" : i === 1 ? "Tomorrow" : d.toLocaleDateString("en", { weekday: "short" }),
+      dayNum: d.getDate(),
+      month: d.toLocaleDateString("en", { month: "short" }),
+    };
+  });
+}
+
+function groupSlots(slots) {
+  const g = { Morning: [], Afternoon: [], Evening: [] };
+  slots.forEach((s) => {
+    const h = parseInt(s.start?.split(":")[0] || "0");
+    if (h < 12) g.Morning.push(s);
+    else if (h < 17) g.Afternoon.push(s);
+    else g.Evening.push(s);
+  });
+  return g;
+}
 
 // Icons
 const Icons = {
@@ -47,6 +83,56 @@ function MyAppointmentsPanel() {
   const [cancelSuccess, setCancelSuccess] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Reschedule state
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState(null);
+  const [rescheduleSlot, setRescheduleSlot] = useState(null);
+  const [rescheduleSuccess, setRescheduleSuccess] = useState(false);
+  const days = getNextDays(7);
+  const selectedDate = rescheduleDate || days[0].dateStr;
+  const { mutateAsync: reschedule, isPending: isRescheduling } = useRescheduleConsultation();
+
+  const { data: slotsResponse, isLoading: slotsLoading } = useSlots(
+    {
+      startDate: selectedDate,
+      endDate: selectedDate,
+      "doctorIds[]": appointment?.doctorId,
+    },
+    { enabled: showReschedule && !!appointment?.doctorId }
+  );
+
+  const allSlots = slotsResponse?.data
+    ? Object.values(slotsResponse.data?.[0] || {}).flat()
+    : [];
+  const groupedSlots = groupSlots(allSlots);
+
+  const handleReschedule = async () => {
+    if (!rescheduleSlot || !appointment?._id) return;
+    try {
+      await reschedule({
+        appointmentId: appointment._id,
+        data: {
+          updateType: "RESCHEDULE",
+          appointmentDate: selectedDate,
+          appointmentStartTime: rescheduleSlot.start,
+          appointmentEndTime: rescheduleSlot.end,
+          slotId: rescheduleSlot._id,
+        },
+      });
+      setRescheduleSuccess(true);
+      setShowReschedule(false);
+      setAppointment((prev) => ({
+        ...prev,
+        appointmentDate: selectedDate,
+        appointmentStartTime: rescheduleSlot.start,
+        appointmentEndTime: rescheduleSlot.end,
+      }));
+    } catch (err) {
+      console.error("Reschedule failed:", err);
+      setAptError("Failed to reschedule. Please try again.");
+    }
+  };
+
   const fetchAppointment = useCallback(async () => {
     setAptLoading(true);
     setAptError("");
@@ -62,7 +148,15 @@ function MyAppointmentsPanel() {
       }
 
       const response = await AppointmentService.getAppointmentDetails(appointmentId);
-      setAppointment(response?.data || null);
+      const apt = response?.data || null;
+
+      if (isAppointmentMissed(apt)) {
+        // Clear the stale appointment so user can book again
+        if (email) localStorage.removeItem(`meradocAppointmentId_${email}`);
+        setAppointment({ ...apt, _missed: true });
+      } else {
+        setAppointment(apt);
+      }
     } catch (err) {
       console.error("Failed to fetch appointment:", err);
       setAptError("Could not load appointment details. Please try again.");
@@ -127,12 +221,34 @@ function MyAppointmentsPanel() {
     );
   }
 
+  if (appointment._missed) {
+    return (
+      <div className="apt-panel-empty">
+        <div className="apt-empty-icon" style={{ background: "#fef3c7", color: "#92400e" }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <h3>Appointment Missed</h3>
+        <p>Your appointment on <strong>{appointment.appointmentDate}</strong> at <strong>{formatTime(appointment.appointmentStartTime)}</strong> has passed.</p>
+        <Link href="/consultancy" className="btn-book-new">Book New Appointment</Link>
+      </div>
+    );
+  }
+
   const statusStyle = STATUS_COLORS[appointment.appointmentStatus] || STATUS_COLORS.PENDING;
   const isActive = !["CANCELLED", "COMPLETED"].includes(appointment.appointmentStatus);
   const doctor = appointment.doctorDetails;
 
   return (
     <div className="apt-panel">
+      {rescheduleSuccess && (
+        <div className="apt-success-banner">
+          {Icons.checkCircle}
+          <span>Appointment rescheduled successfully!</span>
+        </div>
+      )}
+
       {cancelSuccess && (
         <div className="apt-success-banner">
           {Icons.checkCircle}
@@ -203,17 +319,97 @@ function MyAppointmentsPanel() {
           </Link>
 
           {isActive && !cancelSuccess && (
-            <button
-              className="btn-cancel-apt"
-              onClick={() => setShowConfirm(true)}
-              disabled={cancelling}
-            >
-              {Icons.xCircle}
-              Cancel Consultation
-            </button>
+            <>
+              <button
+                className="btn-reschedule-apt"
+                onClick={() => { setShowReschedule((v) => !v); setRescheduleSlot(null); }}
+              >
+                {Icons.refresh}
+                Reschedule
+              </button>
+              <button
+                className="btn-cancel-apt"
+                onClick={() => setShowConfirm(true)}
+                disabled={cancelling}
+              >
+                {Icons.xCircle}
+                Cancel Consultation
+              </button>
+            </>
           )}
         </div>
       </div>
+
+      {/* Reschedule Panel */}
+      {showReschedule && (
+        <div className="reschedule-panel">
+          <h4 className="reschedule-title">Select New Date &amp; Time</h4>
+
+          {/* Date chips */}
+          <div className="reschedule-dates">
+            {days.map((day) => (
+              <button
+                key={day.dateStr}
+                className={`date-chip ${selectedDate === day.dateStr ? "active" : ""}`}
+                onClick={() => { setRescheduleDate(day.dateStr); setRescheduleSlot(null); }}
+              >
+                <span className="date-chip-label">{day.label}</span>
+                <span className="date-chip-num">{day.dayNum}</span>
+                <span className="date-chip-month">{day.month}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Slot picker */}
+          {slotsLoading ? (
+            <div className="slots-loading">
+              <div className="apt-spinner-sm" />
+              <p>Loading slots...</p>
+            </div>
+          ) : allSlots.length === 0 ? (
+            <p className="slots-empty">No slots available for this date.</p>
+          ) : (
+            <div className="slot-groups">
+              {Object.entries(groupedSlots).map(([period, slots]) =>
+                slots.length > 0 ? (
+                  <div key={period} className="slot-group">
+                    <p className="slot-group-label">{period}</p>
+                    <div className="slot-chips">
+                      {slots.map((slot) => (
+                        <button
+                          key={slot._id}
+                          className={`slot-chip ${rescheduleSlot?._id === slot._id ? "active" : ""}`}
+                          onClick={() => setRescheduleSlot(slot)}
+                        >
+                          {formatTime(slot.start)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="reschedule-actions">
+            <button
+              className="btn-dialog-keep"
+              onClick={() => { setShowReschedule(false); setRescheduleSlot(null); }}
+              disabled={isRescheduling}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn-confirm-reschedule"
+              onClick={handleReschedule}
+              disabled={!rescheduleSlot || isRescheduling}
+            >
+              {isRescheduling ? "Rescheduling..." : "Confirm Reschedule"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Confirm Cancel Dialog */}
       {showConfirm && (
@@ -246,6 +442,156 @@ function MyAppointmentsPanel() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Prescriptions Panel ─────────────────────────────────────────────────────
+function PrescriptionsPanel() {
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const email = localStorage.getItem("userEmail") || "";
+    const patientId = email ? localStorage.getItem(`meradocPatientId_${email}`) : null;
+    if (!patientId) { setLoading(false); return; }
+
+    fetch(`/api/prescriptions?patientId=${encodeURIComponent(patientId)}`)
+      .then((r) => r.json())
+      .then((json) => setPrescriptions(json.prescriptions || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="apt-panel-loading">
+        <div className="apt-spinner-sm" />
+        <p>Loading prescriptions...</p>
+      </div>
+    );
+  }
+
+  if (prescriptions.length === 0) {
+    return (
+      <div className="apt-panel-empty">
+        <div className="apt-empty-icon">{Icons.pill}</div>
+        <h3>No Prescriptions Yet</h3>
+        <p>Your prescriptions will appear here after a completed consultation.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rx-list">
+      {prescriptions.map((rx, i) => {
+        const p = rx.raw_data?.prescription || {};
+        const diag = p.diagnosisAndObservations || {};
+        const meds = p.medicines || [];
+        const imgUrls = p.prescriptionImgUrls || [];
+        const labTests = p.labTests || [];
+        const radiology = p.radiology || [];
+        const doctor = rx.raw_data?.doctorDetails || {};
+        const dateLabel = p.createdAt
+          ? new Date(p.createdAt).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })
+          : new Date(rx.created_at).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" });
+
+        return (
+          <div key={i} className="rx-card">
+            {/* Card header */}
+            <div className="rx-card-head">
+              <div>
+                <p className="apt-meta-label">Prescription Date</p>
+                <p className="apt-meta-value">{dateLabel}</p>
+              </div>
+              {doctor.name && (
+                <div>
+                  <p className="apt-meta-label">Doctor</p>
+                  <p className="apt-meta-value">Dr. {doctor.name}</p>
+                </div>
+              )}
+              {rx.appointment_display_id && (
+                <div>
+                  <p className="apt-meta-label">Appointment</p>
+                  <p className="apt-meta-value apt-id-text">{rx.appointment_display_id}</p>
+                </div>
+              )}
+              {imgUrls.length > 0 && (
+                <a href={imgUrls[0]} target="_blank" rel="noopener noreferrer" className="rx-view-btn">
+                  View Prescription
+                </a>
+              )}
+            </div>
+
+            {/* Diagnosis */}
+            {(diag.chiefComplaints || diag.diagnosis) && (
+              <div className="rx-section">
+                {diag.chiefComplaints && (
+                  <div className="rx-row"><span className="rx-key">Chief Complaints</span><span className="rx-val">{diag.chiefComplaints}</span></div>
+                )}
+                {diag.diagnosis && (
+                  <div className="rx-row"><span className="rx-key">Diagnosis</span><span className="rx-val">{diag.diagnosis}</span></div>
+                )}
+                {diag.allergies && (
+                  <div className="rx-row"><span className="rx-key">Allergies</span><span className="rx-val">{diag.allergies}</span></div>
+                )}
+              </div>
+            )}
+
+            {/* Medicines */}
+            {meds.length > 0 && (
+              <div className="rx-section">
+                <p className="rx-section-title">Medicines</p>
+                <table className="rx-table">
+                  <thead>
+                    <tr>
+                      <th>Medicine</th>
+                      <th>Type</th>
+                      <th>Frequency</th>
+                      <th>Duration</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {meds.map((m, j) => (
+                      <tr key={j}>
+                        <td>{m.name || "—"}</td>
+                        <td>{m.medType || "—"}</td>
+                        <td>{[m.frequency, m.frequencyUnit].filter(Boolean).join(" ") || "—"}</td>
+                        <td>{[m.duration, m.durationUnit].filter(Boolean).join(" ") || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Lab tests & radiology */}
+            {(labTests.length > 0 || radiology.length > 0) && (
+              <div className="rx-section rx-tags-row">
+                {labTests.length > 0 && (
+                  <div>
+                    <p className="rx-section-title">Lab Tests</p>
+                    <div className="rx-tags">{labTests.map((t, j) => <span key={j} className="rx-tag">{t}</span>)}</div>
+                  </div>
+                )}
+                {radiology.length > 0 && (
+                  <div>
+                    <p className="rx-section-title">Radiology</p>
+                    <div className="rx-tags">{radiology.map((r, j) => <span key={j} className="rx-tag">{r}</span>)}</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Special instruction */}
+            {p.specialInstruction && (
+              <div className="rx-section">
+                <div className="rx-row"><span className="rx-key">Special Instruction</span><span className="rx-val">{p.specialInstruction}</span></div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -351,7 +697,10 @@ export default function MyProfilePage() {
               </button>
             </li>
             <li>
-              <button className="menu-link menu-btn">
+              <button
+                className={`menu-link menu-btn ${activeTab === "prescriptions" ? "active" : ""}`}
+                onClick={() => setActiveTab("prescriptions")}
+              >
                 {Icons.pill}
                 Prescriptions
               </button>
@@ -455,6 +804,16 @@ export default function MyProfilePage() {
                 <Link href="/consultancy" className="btn-edit">+ Book New</Link>
               </div>
               <MyAppointmentsPanel />
+            </>
+          )}
+
+          {/* ── Prescriptions Tab ── */}
+          {activeTab === "prescriptions" && (
+            <>
+              <div className="section-title">
+                My Prescriptions
+              </div>
+              <PrescriptionsPanel />
             </>
           )}
 

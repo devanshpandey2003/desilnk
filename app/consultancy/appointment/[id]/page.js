@@ -41,6 +41,7 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
   const appointmentMongoId = params.id;
 
   const [isTokenReady, setIsTokenReady] = useState(false);
+  const [prescriptions, setPrescriptions] = useState([]);
   const { mutateAsync: generateToken } = useGenerateToken();
 
   useEffect(() => {
@@ -58,6 +59,14 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
   const { data, isLoading, isError } = useAppointmentDetails(
     isTokenReady ? appointmentMongoId : null
   );
+
+  useEffect(() => {
+    if (!appointmentMongoId) return;
+    fetch(`/api/prescriptions?appointmentId=${encodeURIComponent(appointmentMongoId)}`)
+      .then((r) => r.json())
+      .then((json) => setPrescriptions(json.prescriptions || []))
+      .catch(() => {});
+  }, [appointmentMongoId]);
 
   const apt = data?.data;
 
@@ -191,7 +200,167 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
           </div>
         )}
 
-        {/* Documents */}
+        {/* Prescriptions from webhook */}
+        {prescriptions.length > 0 && (
+          <div className="apt-card">
+            <h3 className="apt-card-title">Prescriptions</h3>
+            <ul className="apt-docs">
+              {prescriptions.map((rx, i) => {
+                const p = rx.raw_data?.prescription || {};
+                const diag = p.diagnosisAndObservations || {};
+                const meds = p.medicines || [];
+                const imgUrls = p.prescriptionImgUrls || [];
+                const labTests = p.labTests || [];
+                const radiology = p.radiology || [];
+                const followUp = p.followUp || {};
+
+                return (
+                  <li key={i} className="apt-rx-item">
+                    {/* Header */}
+                    <div className="apt-rx-header">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                      </svg>
+                      <span className="apt-rx-label">
+                        Prescription {prescriptions.length > 1 ? `#${i + 1}` : ""}
+                        <span className="apt-rx-date">
+                          {p.createdAt
+                            ? new Date(p.createdAt).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })
+                            : new Date(rx.created_at).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Prescription images */}
+                    {imgUrls.length > 0 && (
+                      <div className="apt-rx-images">
+                        {imgUrls.map((url, j) => (
+                          <a key={j} href={url} target="_blank" rel="noopener noreferrer" className="apt-rx-download">
+                            View Prescription {imgUrls.length > 1 ? j + 1 : ""}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Diagnosis */}
+                    {(diag.chiefComplaints || diag.diagnosis) && (
+                      <div className="apt-rx-section">
+                        {diag.chiefComplaints && (
+                          <div className="apt-rx-row">
+                            <span className="apt-rx-key">Chief Complaints</span>
+                            <span className="apt-rx-val">{diag.chiefComplaints}</span>
+                          </div>
+                        )}
+                        {diag.diagnosis && (
+                          <div className="apt-rx-row">
+                            <span className="apt-rx-key">Diagnosis</span>
+                            <span className="apt-rx-val">{diag.diagnosis}</span>
+                          </div>
+                        )}
+                        {diag.medHistory && (
+                          <div className="apt-rx-row">
+                            <span className="apt-rx-key">Medical History</span>
+                            <span className="apt-rx-val">{diag.medHistory}</span>
+                          </div>
+                        )}
+                        {diag.allergies && (
+                          <div className="apt-rx-row">
+                            <span className="apt-rx-key">Allergies</span>
+                            <span className="apt-rx-val">{diag.allergies}</span>
+                          </div>
+                        )}
+                        {diag.vitals && (
+                          <div className="apt-rx-row">
+                            <span className="apt-rx-key">Vitals</span>
+                            <span className="apt-rx-val">{diag.vitals}</span>
+                          </div>
+                        )}
+                        {diag.expectedOutcome && (
+                          <div className="apt-rx-row">
+                            <span className="apt-rx-key">Expected Outcome</span>
+                            <span className="apt-rx-val">{diag.expectedOutcome}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Medicines */}
+                    {meds.length > 0 && (
+                      <div className="apt-rx-section">
+                        <p className="apt-rx-section-title">Medicines</p>
+                        <table className="apt-rx-table">
+                          <thead>
+                            <tr>
+                              <th>Medicine</th>
+                              <th>Type</th>
+                              <th>Frequency</th>
+                              <th>Duration</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {meds.map((m, j) => (
+                              <tr key={j}>
+                                <td>{m.name || "—"}</td>
+                                <td>{m.medType || "—"}</td>
+                                <td>{[m.frequency, m.frequencyUnit].filter(Boolean).join(" ") || "—"}</td>
+                                <td>{[m.duration, m.durationUnit].filter(Boolean).join(" ") || "—"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* Lab tests & Radiology */}
+                    {(labTests.length > 0 || radiology.length > 0) && (
+                      <div className="apt-rx-section apt-rx-tags-section">
+                        {labTests.length > 0 && (
+                          <div>
+                            <p className="apt-rx-section-title">Lab Tests</p>
+                            <div className="apt-rx-tags">
+                              {labTests.map((t, j) => <span key={j} className="apt-rx-tag">{t}</span>)}
+                            </div>
+                          </div>
+                        )}
+                        {radiology.length > 0 && (
+                          <div>
+                            <p className="apt-rx-section-title">Radiology</p>
+                            <div className="apt-rx-tags">
+                              {radiology.map((r, j) => <span key={j} className="apt-rx-tag">{r}</span>)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Special instruction & Follow-up */}
+                    {(p.specialInstruction || followUp.followUpDateTime) && (
+                      <div className="apt-rx-section">
+                        {p.specialInstruction && (
+                          <div className="apt-rx-row">
+                            <span className="apt-rx-key">Special Instruction</span>
+                            <span className="apt-rx-val">{p.specialInstruction}</span>
+                          </div>
+                        )}
+                        {followUp.followUpDateTime && (
+                          <div className="apt-rx-row">
+                            <span className="apt-rx-key">Follow-up</span>
+                            <span className="apt-rx-val">{followUp.followUpDateTime}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {/* Documents attached to appointment */}
         {apt.documents?.length > 0 && (
           <div className="apt-card">
             <h3 className="apt-card-title">Documents</h3>

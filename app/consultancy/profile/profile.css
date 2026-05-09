@@ -571,6 +571,361 @@
   background: #0f518e;
 }
 
+/* ── Prescriptions Panel ── */
+.rx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rx-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: white;
+}
+
+.rx-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rx-view-btn {
+  margin-left: auto;
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: #115ea3;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s;
+  align-self: center;
+}
+
+.rx-view-btn:hover {
+  background: #0f518e;
+}
+
+.rx-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rx-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 6px;
+}
+
+.rx-row {
+  display: flex;
+  gap: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.rx-key {
+  color: #64748b;
+  font-weight: 500;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.rx-val {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.rx-tags-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.rx-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.rx-tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.rx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.rx-table th {
+  text-align: left;
+  padding: 6px 10px;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rx-table td {
+  padding: 8px 10px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.rx-table tr:last-child td {
+  border-bottom: none;
+}
+
+@media (max-width: 600px) {
+  .rx-card-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .rx-view-btn {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+  .rx-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .rx-key {
+    min-width: unset;
+    font-size: 0.75rem;
+  }
+  .rx-table th,
+  .rx-table td {
+    padding: 6px 6px;
+    font-size: 0.78rem;
+  }
+}
+
+/* ── Reschedule Button ── */
+.btn-reschedule-apt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: 1px solid #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-reschedule-apt:hover {
+  background: #dbeafe;
+  border-color: #60a5fa;
+}
+
+/* ── Reschedule Panel ── */
+.reschedule-panel {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: slideUp 0.2s ease;
+}
+
+.reschedule-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Date chips */
+.reschedule-dates {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.date-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 64px;
+  font-family: inherit;
+}
+
+.date-chip:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.date-chip.active {
+  border-color: #115ea3;
+  background: #115ea3;
+  color: white;
+}
+
+.date-chip-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.date-chip.active .date-chip-label {
+  opacity: 0.85;
+}
+
+.date-chip-num {
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.date-chip-month {
+  font-size: 0.72rem;
+  color: inherit;
+  opacity: 0.7;
+}
+
+/* Slot groups */
+.slots-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.slots-empty {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  text-align: center;
+  padding: 20px 0;
+  margin: 0;
+}
+
+.slot-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.slot-group-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px 0;
+}
+
+.slot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.slot-chip {
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: white;
+  color: #1e293b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.slot-chip:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.slot-chip.active {
+  border-color: #115ea3;
+  background: #115ea3;
+  color: white;
+}
+
+/* Reschedule actions */
+.reschedule-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-confirm-reschedule {
+  padding: 11px 28px;
+  border-radius: 10px;
+  border: none;
+  background: #115ea3;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(17, 94, 163, 0.25);
+}
+
+.btn-confirm-reschedule:hover:not(:disabled) {
+  background: #0f518e;
+}
+
+.btn-confirm-reschedule:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* ── Cancel Confirmation Dialog ── */
 .cancel-overlay {
   position: fixed;
@@ -699,8 +1054,21 @@
     flex-direction: column;
   }
   .btn-view-apt,
-  .btn-cancel-apt {
+  .btn-cancel-apt,
+  .btn-reschedule-apt {
     width: 100%;
     justify-content: center;
+  }
+  .reschedule-actions {
+    flex-direction: column-reverse;
+  }
+  .btn-confirm-reschedule,
+  .reschedule-actions .btn-dialog-keep {
+    width: 100%;
+    text-align: center;
+  }
+  .date-chip {
+    min-width: 56px;
+    padding: 8px 12px;
   }
 }
