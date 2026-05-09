@@ -151,12 +151,32 @@ function MyAppointmentsPanel() {
       const apt = response?.data || null;
 
       if (isAppointmentMissed(apt)) {
-        // Clear the stale appointment so user can book again
         if (email) localStorage.removeItem(`meradocAppointmentId_${email}`);
         setAppointment({ ...apt, _missed: true });
-      } else {
-        setAppointment(apt);
+        return;
       }
+
+      // Check if MeraDoc has sent a terminal status via webhook
+      const TERMINAL = ["COMPLETED", "CANCELLED"];
+      const MISSED_SUB = ["PATIENT_MISSED", "DOCTOR_MISSED"];
+      try {
+        const statusRes = await fetch(`/api/appointment-status?appointmentId=${appointmentId}`);
+        const statusJson = await statusRes.json();
+        const update = statusJson.statusUpdate;
+        if (update) {
+          const isMissedSub = MISSED_SUB.includes(update.sub_status);
+          if (TERMINAL.includes(update.status) && isMissedSub) {
+            if (email) localStorage.removeItem(`meradocAppointmentId_${email}`);
+            setAppointment({ ...apt, _missed: true });
+            return;
+          }
+          if (TERMINAL.includes(update.status)) {
+            if (email) localStorage.removeItem(`meradocAppointmentId_${email}`);
+          }
+        }
+      } catch (_) {}
+
+      setAppointment(apt);
     } catch (err) {
       console.error("Failed to fetch appointment:", err);
       setAptError("Could not load appointment details. Please try again.");
