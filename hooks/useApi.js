@@ -39,6 +39,26 @@ export const useRegisterPatient = () => {
   });
 };
 
+export const useAddFamilyMember = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ patientId, members }) => UserService.addFamilyMember(patientId, members),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["familyMembers"] });
+    },
+  });
+};
+
+export const useRemoveFamilyMember = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ patientId, memberAccountId }) => UserService.removeFamilyMember(patientId, memberAccountId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["familyMembers"] });
+    },
+  });
+};
+
 // =====================
 // Appointment Hooks
 // =====================

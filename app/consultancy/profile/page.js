@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserAPI } from "../../../lib/api";
 import { AppointmentService } from "../../../services/appointment.service";
-import { useSlots, useRescheduleConsultation } from "../../../hooks/useApi";
+import { useSlots, useRescheduleConsultation, useAddFamilyMember, useRemoveFamilyMember } from "../../../hooks/useApi";
 import "./profile.css";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -92,18 +92,34 @@ function MyAppointmentsPanel() {
   const selectedDate = rescheduleDate || days[0].dateStr;
   const { mutateAsync: reschedule, isPending: isRescheduling } = useRescheduleConsultation();
 
+  const doctorId =
+    appointment?.doctorDetails?._id ||
+    appointment?.doctorDetails?.id ||
+    appointment?.doctorId ||
+    null;
+
   const { data: slotsResponse, isLoading: slotsLoading } = useSlots(
     {
       startDate: selectedDate,
       endDate: selectedDate,
-      "doctorIds[]": appointment?.doctorId,
+      "doctorIds[]": doctorId,
     },
-    { enabled: showReschedule && !!appointment?.doctorId }
+    { enabled: showReschedule && !!doctorId }
   );
 
-  const allSlots = slotsResponse?.data
-    ? Object.values(slotsResponse.data?.[0] || {}).flat()
-    : [];
+  const allSlots = (() => {
+    const data = slotsResponse?.data;
+    if (!data || !Array.isArray(data)) return [];
+    const flat = [];
+    data.forEach((dateObj) => {
+      if (dateObj && typeof dateObj === "object") {
+        Object.values(dateObj).forEach((arr) => {
+          if (Array.isArray(arr)) flat.push(...arr);
+        });
+      }
+    });
+    return flat;
+  })();
   const groupedSlots = groupSlots(allSlots);
 
   const handleReschedule = async () => {
@@ -466,6 +482,188 @@ function MyAppointmentsPanel() {
   );
 }
 
+// ─── Family Members Panel ────────────────────────────────────────────────────
+const RELATIONSHIPS = ["Son", "Daughter", "Spouse", "Father", "Mother", "Brother", "Sister", "Other"];
+const GENDERS = ["Male", "Female", "Others"];
+
+const BLANK_FORM = { name: "", phoneNumber: "", dob: "", gender: "", relationship: "" };
+
+function FamilyMembersPanel() {
+  const [members, setMembers] = useState([]);
+  const [loadingList, setLoadingList] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(BLANK_FORM);
+  const [formError, setFormError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const { mutateAsync: addMember, isPending: isAdding } = useAddFamilyMember();
+  const { mutateAsync: removeMember, isPending: isRemoving } = useRemoveFamilyMember();
+
+  const getPatientIdLocal = () => {
+    const email = localStorage.getItem("userEmail") || "";
+    return email ? localStorage.getItem(`meradocPatientId_${email}`) : null;
+  };
+
+  const fetchMembers = async () => {
+    const patientId = getPatientIdLocal();
+    if (!patientId) { setLoadingList(false); return; }
+    try {
+      const res = await fetch(`/api/family-members?patientId=${encodeURIComponent(patientId)}`);
+      const json = await res.json();
+      setMembers(json.members || []);
+    } catch (_) {}
+    setLoadingList(false);
+  };
+
+  useEffect(() => { fetchMembers(); }, []);
+
+  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    setFormError("");
+    if (!form.name || !form.phoneNumber || !form.dob || !form.gender || !form.relationship) {
+      setFormError("All fields are required.");
+      return;
+    }
+    const patientId = getPatientIdLocal();
+    if (!patientId) { setFormError("Patient ID not found. Please complete registration first."); return; }
+
+    const age = Math.floor((new Date() - new Date(form.dob)) / (365.25 * 24 * 60 * 60 * 1000));
+    const member = { ...form, age, phoneNumber: String(form.phoneNumber) };
+
+    try {
+      const response = await addMember({ patientId, members: [member] });
+      const memberAccountId = response?.data?.[0]?._id || response?.data?._id || null;
+
+      // Save to our DB for listing
+      await fetch("/api/family-members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patientId, member, memberAccountId }),
+      });
+
+      setSuccessMsg(`${form.name} added successfully.`);
+      setForm(BLANK_FORM);
+      setShowForm(false);
+      fetchMembers();
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Failed to add family member. Please try again.";
+      setFormError(msg);
+    }
+  };
+
+  const handleRemove = async (member) => {
+    const patientId = getPatientIdLocal();
+    if (!patientId) return;
+    try {
+      if (member.member_account_id) {
+        await removeMember({ patientId, memberAccountId: member.member_account_id });
+      }
+      await fetch(`/api/family-members?id=${member.id}`, { method: "DELETE" });
+      setMembers((prev) => prev.filter((m) => m.id !== member.id));
+    } catch (_) {}
+  };
+
+  if (loadingList) {
+    return (
+      <div className="apt-panel-loading">
+        <div className="apt-spinner-sm" />
+        <p>Loading family members...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fm-panel">
+      {successMsg && (
+        <div className="apt-success-banner">
+          {Icons.checkCircle}
+          <span>{successMsg}</span>
+        </div>
+      )}
+
+      {/* Member cards */}
+      {members.length === 0 && !showForm && (
+        <div className="apt-panel-empty">
+          <div className="apt-empty-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <h3>No Family Members</h3>
+          <p>Add family members to book consultations on their behalf.</p>
+        </div>
+      )}
+
+      {members.length > 0 && (
+        <div className="fm-list">
+          {members.map((m) => (
+            <div key={m.id} className="fm-card">
+              <div className="fm-avatar">{(m.name || "?").charAt(0).toUpperCase()}</div>
+              <div className="fm-info">
+                <p className="fm-name">{m.name}</p>
+                <p className="fm-meta">{m.relationship} • {m.gender} • {m.age ? `${m.age} yrs` : m.dob}</p>
+                {m.phone_number && <p className="fm-meta">{m.phone_number}</p>}
+              </div>
+              <button className="fm-remove-btn" onClick={() => handleRemove(m)} disabled={isRemoving} title="Remove">
+                {Icons.xCircle}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add form */}
+      {showForm ? (
+        <form className="fm-form" onSubmit={handleAdd}>
+          <h4 className="fm-form-title">Add Family Member</h4>
+          {formError && <p className="fm-form-error">{formError}</p>}
+          <div className="fm-form-grid">
+            <div className="info-group">
+              <label>Full Name</label>
+              <input className="info-input" name="name" value={form.name} onChange={handleChange} placeholder="e.g. Priya Sharma" />
+            </div>
+            <div className="info-group">
+              <label>Phone Number</label>
+              <input className="info-input" name="phoneNumber" value={form.phoneNumber} onChange={handleChange} placeholder="10-digit number" maxLength={10} />
+            </div>
+            <div className="info-group">
+              <label>Date of Birth</label>
+              <input className="info-input" type="date" name="dob" value={form.dob} onChange={handleChange} />
+            </div>
+            <div className="info-group">
+              <label>Gender</label>
+              <select className="info-input" name="gender" value={form.gender} onChange={handleChange}>
+                <option value="">Select Gender</option>
+                {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <div className="info-group">
+              <label>Relationship</label>
+              <select className="info-input" name="relationship" value={form.relationship} onChange={handleChange}>
+                <option value="">Select Relationship</option>
+                {RELATIONSHIPS.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="fm-form-actions">
+            <button type="button" className="btn-cancel" onClick={() => { setShowForm(false); setFormError(""); setForm(BLANK_FORM); }}>Cancel</button>
+            <button type="submit" className="btn-save" disabled={isAdding}>{isAdding ? "Adding..." : "Add Member"}</button>
+          </div>
+        </form>
+      ) : (
+        <button className="fm-add-btn" onClick={() => setShowForm(true)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Family Member
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Prescriptions Panel ─────────────────────────────────────────────────────
 function PrescriptionsPanel() {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -711,6 +909,18 @@ export default function MyProfilePage() {
               </button>
             </li>
             <li>
+              <button
+                className={`menu-link menu-btn ${activeTab === "family" ? "active" : ""}`}
+                onClick={() => setActiveTab("family")}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Family Members
+              </button>
+            </li>
+            <li>
               <button className="menu-link menu-btn">
                 {Icons.records}
                 Medical Records
@@ -824,6 +1034,14 @@ export default function MyProfilePage() {
                 <Link href="/consultancy" className="btn-edit">+ Book New</Link>
               </div>
               <MyAppointmentsPanel />
+            </>
+          )}
+
+          {/* ── Family Members Tab ── */}
+          {activeTab === "family" && (
+            <>
+              <div className="section-title">Family Members</div>
+              <FamilyMembersPanel />
             </>
           )}
 

@@ -571,6 +571,155 @@
   background: #0f518e;
 }
 
+/* ── Family Members Panel ── */
+.fm-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fm-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+}
+
+.fm-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #115ea3;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fm-info {
+  flex: 1;
+}
+
+.fm-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 3px;
+}
+
+.fm-meta {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.fm-remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.fm-remove-btn:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.fm-remove-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fm-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: 1.5px dashed #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  align-self: flex-start;
+}
+
+.fm-add-btn:hover {
+  background: #dbeafe;
+  border-color: #60a5fa;
+}
+
+.fm-form {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fm-form-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.fm-form-error {
+  font-size: 0.875rem;
+  color: #dc2626;
+  background: #fee2e2;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0;
+}
+
+.fm-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.fm-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid #e2e8f0;
+}
+
+@media (max-width: 600px) {
+  .fm-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .fm-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ── Prescriptions Panel ── */
 .rx-list {
   display: flex;
