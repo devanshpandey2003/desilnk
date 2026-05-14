@@ -571,6 +571,158 @@
   background: #0f518e;
 }
 
+/* ── Lab Tests Panel ── */
+.lab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lab-search-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.lab-track-btn {
+  white-space: nowrap;
+  padding: 12px 24px;
+}
+
+.lab-error {
+  font-size: 0.875rem;
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 0;
+}
+
+.lab-tracker-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.lab-tracker-head {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.lab-steps {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  padding: 8px 0;
+}
+
+.lab-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  gap: 10px;
+}
+
+.lab-step-icon-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.lab-step-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  z-index: 1;
+  position: relative;
+}
+
+.lab-step.done .lab-step-icon {
+  background: #115ea3;
+  border-color: #115ea3;
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.lab-step.current .lab-step-icon {
+  background: #eff6ff;
+  border-color: #115ea3;
+  box-shadow: 0 0 0 4px rgba(17, 94, 163, 0.15);
+}
+
+.lab-step-line {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 0;
+}
+
+.lab-step-line.done {
+  background: #115ea3;
+}
+
+.lab-step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-align: center;
+  margin: 0;
+}
+
+.lab-step.done .lab-step-label,
+.lab-step.current .lab-step-label {
+  color: #1e293b;
+}
+
+.lab-cancelled-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+  .lab-search-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .lab-track-btn {
+    width: 100%;
+  }
+  .lab-step-label {
+    font-size: 0.65rem;
+  }
+  .lab-step-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+}
+
 /* ── Family Members Panel ── */
 .fm-panel {
   display: flex;

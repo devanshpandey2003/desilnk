@@ -482,6 +482,139 @@ function MyAppointmentsPanel() {
   );
 }
 
+// ─── Lab Tests Panel ─────────────────────────────────────────────────────────
+const LAB_STEPS = [
+  { key: "PHLEBO_ASSIGNED",  label: "Phlebotomist Assigned", icon: "🧑‍⚕️" },
+  { key: "SAMPLE_COLLECTED", label: "Sample Collected",       icon: "🧪" },
+  { key: "REPORT_GENERATED", label: "Report Generated",       icon: "📄" },
+  { key: "COMPLETED",        label: "Completed",              icon: "✅" },
+];
+
+function LabTestsPanel() {
+  const [orderId, setOrderId] = useState("");
+  const [inputVal, setInputVal] = useState("");
+  const [order, setOrder] = useState(null);
+  const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState("");
+
+  // On mount, restore last checked orderId from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("labTestOrderId");
+    if (saved) { setOrderId(saved); fetchOrder(saved); }
+  }, []);
+
+  const fetchOrder = async (id) => {
+    if (!id) return;
+    setFetching(true);
+    setFetchError("");
+    try {
+      const res = await fetch(`/api/lab-test-status?orderId=${encodeURIComponent(id)}`);
+      const json = await res.json();
+      setOrder(json.order || null);
+      if (!json.order) setFetchError("No lab test found for this Order ID.");
+    } catch (_) {
+      setFetchError("Failed to fetch status. Please try again.");
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const handleTrack = (e) => {
+    e.preventDefault();
+    if (!inputVal.trim()) return;
+    const id = inputVal.trim();
+    localStorage.setItem("labTestOrderId", id);
+    setOrderId(id);
+    fetchOrder(id);
+  };
+
+  const currentStepIndex = order
+    ? order.status === "CANCELLED"
+      ? -1
+      : LAB_STEPS.findIndex((s) => s.key === order.status)
+    : -2;
+
+  const isCancelled = order?.status === "CANCELLED";
+
+  return (
+    <div className="lab-panel">
+      {/* Order ID lookup */}
+      <form className="lab-search-form" onSubmit={handleTrack}>
+        <div className="info-group" style={{ flex: 1 }}>
+          <label>Track by Order ID</label>
+          <input
+            className="info-input"
+            placeholder="Enter your lab test Order ID"
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+          />
+        </div>
+        <button type="submit" className="btn-save lab-track-btn" disabled={fetching}>
+          {fetching ? "Tracking..." : "Track"}
+        </button>
+      </form>
+
+      {fetchError && <p className="lab-error">{fetchError}</p>}
+
+      {/* Status tracker */}
+      {order && !isCancelled && (
+        <div className="lab-tracker-card">
+          <div className="lab-tracker-head">
+            <div>
+              <p className="apt-meta-label">Order ID</p>
+              <p className="apt-meta-value apt-id-text">{order.order_id}</p>
+            </div>
+            <div>
+              <p className="apt-meta-label">Last Updated</p>
+              <p className="apt-meta-value">
+                {new Date(order.updated_at).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })}
+              </p>
+            </div>
+          </div>
+
+          <div className="lab-steps">
+            {LAB_STEPS.map((step, i) => {
+              const done    = i <= currentStepIndex;
+              const current = i === currentStepIndex;
+              return (
+                <div key={step.key} className={`lab-step ${done ? "done" : ""} ${current ? "current" : ""}`}>
+                  <div className="lab-step-icon-wrap">
+                    <span className="lab-step-icon">{done ? "✓" : step.icon}</span>
+                    {i < LAB_STEPS.length - 1 && <div className={`lab-step-line ${done && i < currentStepIndex ? "done" : ""}`} />}
+                  </div>
+                  <p className="lab-step-label">{step.label}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {order && isCancelled && (
+        <div className="lab-cancelled-card">
+          <span style={{ fontSize: "2rem" }}>❌</span>
+          <div>
+            <p className="apt-meta-value">Order Cancelled</p>
+            <p className="apt-meta-label">Order ID: {order.order_id}</p>
+          </div>
+        </div>
+      )}
+
+      {!order && !fetching && !fetchError && (
+        <div className="apt-panel-empty">
+          <div className="apt-empty-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
+            </svg>
+          </div>
+          <h3>No Lab Tests</h3>
+          <p>Enter your Order ID above to track your lab test status.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Family Members Panel ────────────────────────────────────────────────────
 const RELATIONSHIPS = ["Son", "Daughter", "Spouse", "Father", "Mother", "Brother", "Sister", "Other"];
 const GENDERS = ["Male", "Female", "Others"];
@@ -921,6 +1054,17 @@ export default function MyProfilePage() {
               </button>
             </li>
             <li>
+              <button
+                className={`menu-link menu-btn ${activeTab === "labtests" ? "active" : ""}`}
+                onClick={() => setActiveTab("labtests")}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
+                </svg>
+                Lab Tests
+              </button>
+            </li>
+            <li>
               <button className="menu-link menu-btn">
                 {Icons.records}
                 Medical Records
@@ -1034,6 +1178,14 @@ export default function MyProfilePage() {
                 <Link href="/consultancy" className="btn-edit">+ Book New</Link>
               </div>
               <MyAppointmentsPanel />
+            </>
+          )}
+
+          {/* ── Lab Tests Tab ── */}
+          {activeTab === "labtests" && (
+            <>
+              <div className="section-title">Lab Tests</div>
+              <LabTestsPanel />
             </>
           )}
 
