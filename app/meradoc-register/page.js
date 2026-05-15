@@ -73,12 +73,15 @@ export default function MeraDocRegisterPage() {
       // ── Step 2: New user — register them ──
       const age = calcAge(month, day, parseInt(year));
 
+      // Map display gender to MeraDoc-expected values
+      const genderMap = { Male: "MALE", Female: "FEMALE", Others: "OTHER" };
+
       const response = await UserService.registerPatient({
         name:                  name.trim(),
         emailId:               emailVal,
         mobileNumber:          phone.trim(),
-        age:                   age > 0 ? age : "",
-        gender,
+        age:                   age > 0 ? age : null,
+        gender:                genderMap[gender] || gender,
         addressDetails:        "",
         addressLine2:          "",
         city:                  "",
@@ -105,8 +108,8 @@ export default function MeraDocRegisterPage() {
 
       router.push("/consultancy");
     } catch (err) {
-      console.error("MeraDoc registration failed:", err);
-      setError(err?.response?.data?.message || "Something went wrong. Please try again.");
+      console.error("MeraDoc registration failed:", err?.response?.data || err.message);
+      setError(err?.response?.data?.message || err?.response?.data?.error || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

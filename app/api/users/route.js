@@ -1,6 +1,26 @@
 import { NextResponse } from "next/server";
 import sql from "../../../lib/db";
 
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get("email");
+
+    if (!email) {
+      return NextResponse.json({ error: "email required" }, { status: 400 });
+    }
+
+    const rows = await sql`
+      SELECT email, phone, name, country FROM users WHERE email = ${email} LIMIT 1
+    `;
+
+    return NextResponse.json({ user: rows[0] || null });
+  } catch (err) {
+    console.error("[GET /api/users]", err);
+    return NextResponse.json({ user: null });
+  }
+}
+
 export async function POST(request) {
   try {
     const { email, phone, name, country } = await request.json();

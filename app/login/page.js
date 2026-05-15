@@ -60,10 +60,35 @@ export default function CreateAccountPage() {
       )
     : COUNTRIES;
 
+  const [checking, setChecking] = useState(false);
+
   /* handlers */
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    const trimmedEmail = email.trim();
     const fullPhone = `${country.code} ${phone}`;
-    localStorage.setItem("userEmail", email.trim());
+
+    setChecking(true);
+    try {
+      const res = await fetch(`/api/users?email=${encodeURIComponent(trimmedEmail)}`);
+      const data = await res.json();
+
+      if (data.user) {
+        // Returning user — restore their data and go straight to dashboard
+        localStorage.setItem("userEmail", trimmedEmail);
+        localStorage.setItem("userPhone", data.user.phone || fullPhone);
+        localStorage.setItem("userName", data.user.name || "");
+        localStorage.setItem("userCountry", data.user.country || "");
+        router.push(`/dashboard?name=${encodeURIComponent(data.user.name || "")}`);
+        return;
+      }
+    } catch (err) {
+      console.error("User lookup failed:", err);
+    } finally {
+      setChecking(false);
+    }
+
+    // New user — proceed with onboarding
+    localStorage.setItem("userEmail", trimmedEmail);
     localStorage.setItem("userPhone", fullPhone);
     router.push(`/login/verify?phone=${encodeURIComponent(fullPhone)}`);
   };
@@ -150,10 +175,10 @@ export default function CreateAccountPage() {
           {/* Continue */}
           <button
             className="btn-continue"
-            disabled={!isValid}
+            disabled={!isValid || checking}
             onClick={handleContinue}
           >
-            Continue
+            {checking ? "Checking..." : "Continue"}
           </button>
 
           <div className="bottom-divider" />
