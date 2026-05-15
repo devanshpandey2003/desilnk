@@ -345,6 +345,28 @@
   border: 1px solid var(--card-border);
 }
 
+/* Sidebar section labels */
+.sidebar-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3b0;
+  padding: 16px 16px 4px;
+  margin: 0;
+}
+
+/* Nav button (same look as nav-item link) */
+.nav-btn {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
 /* Mobile Toggle */
 .mobile-menu-btn {
   display: none;

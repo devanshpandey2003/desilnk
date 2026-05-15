@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { UserAPI } from "../../../lib/api";
 import { AppointmentService } from "../../../services/appointment.service";
@@ -948,9 +948,10 @@ function PrescriptionsPanel() {
 }
 
 // ─── Main Profile Page ────────────────────────────────────────────────────────
-export default function MyProfilePage() {
+function MyProfilePageInner() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("personal");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "personal");
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1210,5 +1211,13 @@ export default function MyProfilePage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function MyProfilePage() {
+  return (
+    <Suspense fallback={<div className="profile-container" style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}><h2>Loading...</h2></div>}>
+      <MyProfilePageInner />
+    </Suspense>
   );
 }

@@ -911,12 +911,78 @@
   }
 }
 
+/* ───── Mobile hamburger button ───── */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary, #1a1f36);
+  padding: 6px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ───── Mobile drawer ───── */
+.mobile-nav-drawer {
+  display: none;
+  position: fixed;
+  top: 72px;
+  left: 0;
+  right: 0;
+  background: white;
+  border-bottom: 1px solid #eaeaea;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  z-index: 99;
+  flex-direction: column;
+  padding: 8px 0 16px;
+}
+
+.mobile-nav-link {
+  display: block;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #4a5568;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mobile-nav-link:hover {
+  background: #f5f7fa;
+  color: #1a4fd4;
+}
+
+.mobile-nav-link.active {
+  color: #1a4fd4;
+  font-weight: 600;
+  background: rgba(26, 79, 212, 0.05);
+}
+
+.mobile-nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 98;
+}
+
 @media (max-width: 768px) {
   .consultancy-nav {
     padding: 0 20px;
+    position: relative;
   }
   .nav-links {
     display: none;
+  }
+  .btn-get-started {
+    display: none;
+  }
+  .mobile-menu-btn {
+    display: flex;
+  }
+  .mobile-nav-drawer {
+    display: flex;
   }
   .hero-section {
     padding: 32px 20px;
