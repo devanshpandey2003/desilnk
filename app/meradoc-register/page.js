@@ -45,7 +45,7 @@ export default function MeraDocRegisterPage() {
 
   const isValid =
     email.trim() && /^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$/.test(email.trim()) &&
-    name.trim() && phone.trim().length >= 8 &&
+    name.trim() && phone.trim().length >= 10 &&
     gender && pincode.length === 6 && agreed;
 
   const handleSignUp = async () => {
@@ -167,10 +167,16 @@ export default function MeraDocRegisterPage() {
           <label>📞 Phone Number*</label>
           <input
             type="tel"
-            placeholder="Enter phone number"
+            placeholder="Enter 10-digit phone number"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+            maxLength={10}
           />
+          {phone.length > 0 && phone.length < 10 && (
+            <p className="mr-field-hint" style={{ color: "#ef4444" }}>
+              Must be 10 digits ({phone.length}/10)
+            </p>
+          )}
         </div>
 
         {/* Gender */}
