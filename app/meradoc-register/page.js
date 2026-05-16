@@ -45,7 +45,7 @@ export default function MeraDocRegisterPage() {
 
   const isValid =
     email.trim() && /^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$/.test(email.trim()) &&
-    name.trim() && phone.trim() &&
+    name.trim() && phone.trim().length >= 8 &&
     gender && pincode.length === 6 && agreed;
 
   const handleSignUp = async () => {
