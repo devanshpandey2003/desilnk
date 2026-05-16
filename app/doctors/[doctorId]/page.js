@@ -410,11 +410,11 @@ export default function DoctorDetailPage({ params: paramsPromise }) {
           <div className="dd-form">
             <label>
               Patient Name *
-              <input type="text" value={patientName} onChange={(e) => setPatientName(e.target.value)} placeholder="Enter full name" />
+              <input type="text" value={patientName} readOnly style={{ background: "#f5f7fa", cursor: "not-allowed", color: "#6b7280" }} />
             </label>
             <label>
               Phone Number *
-              <input type="tel" value={patientPhone} onChange={(e) => setPatientPhone(e.target.value)} placeholder="Enter phone number" />
+              <input type="tel" value={patientPhone} readOnly style={{ background: "#f5f7fa", cursor: "not-allowed", color: "#6b7280" }} />
             </label>
             <label>
               Reason for Consultation

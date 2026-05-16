@@ -156,9 +156,9 @@ export default function MeraDocRegisterPage() {
           <label>👤 Full Name*</label>
           <input
             type="text"
-            placeholder="Enter your full name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            readOnly
+            style={{ background: "#f5f7fa", cursor: "not-allowed", color: "#6b7280" }}
           />
         </div>
 
@@ -167,16 +167,10 @@ export default function MeraDocRegisterPage() {
           <label>📞 Phone Number*</label>
           <input
             type="tel"
-            placeholder="Enter 10-digit phone number"
             value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-            maxLength={10}
+            readOnly
+            style={{ background: "#f5f7fa", cursor: "not-allowed", color: "#6b7280" }}
           />
-          {phone.length > 0 && phone.length < 10 && (
-            <p className="mr-field-hint" style={{ color: "#ef4444" }}>
-              Must be 10 digits ({phone.length}/10)
-            </p>
-          )}
         </div>
 
         {/* Gender */}
