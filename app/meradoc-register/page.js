@@ -73,15 +73,12 @@ export default function MeraDocRegisterPage() {
       // ── Step 2: New user — register them ──
       const age = calcAge(month, day, parseInt(year));
 
-      // Map display gender to MeraDoc-expected values
-      const genderMap = { Male: "MALE", Female: "FEMALE", Others: "OTHER" };
-
       const response = await UserService.registerPatient({
         name:                  name.trim(),
         emailId:               emailVal,
         mobileNumber:          phone.trim(),
         age:                   age > 0 ? age : null,
-        gender:                genderMap[gender] || gender,
+        gender,
         addressDetails:        "",
         addressLine2:          "",
         city:                  "",
