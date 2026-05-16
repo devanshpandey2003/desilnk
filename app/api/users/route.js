@@ -21,6 +21,34 @@ export async function GET(request) {
   }
 }
 
+export async function PATCH(request) {
+  try {
+    const { email, name, country, dob, bloodGroup } = await request.json();
+
+    if (!email) {
+      return NextResponse.json({ error: "email required" }, { status: 400 });
+    }
+
+    // Add optional columns if they don't exist yet
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS dob TEXT`;
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS blood_group TEXT`;
+
+    await sql`
+      UPDATE users
+      SET name        = COALESCE(${name ?? null}, name),
+          country     = COALESCE(${country ?? null}, country),
+          dob         = ${dob ?? null},
+          blood_group = ${bloodGroup ?? null}
+      WHERE email = ${email}
+    `;
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("[PATCH /api/users]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function POST(request) {
   try {
     const { email, phone, name, country } = await request.json();

@@ -91,15 +91,22 @@ export default function MeraDocRegisterPage() {
 
       const patientId = response?.data?._id;
       if (patientId) {
-        // Save email to localStorage so the rest of the app can use it
         localStorage.setItem("userEmail", emailVal);
-        // Save to DB (source of truth)
+        // Save patientId to DB
         await fetch("/api/meradoc/patient", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: emailVal, patientId }),
         });
-        // Cache in localStorage
+        // Save DOB to users table
+        const monthIndex = String(MONTHS.indexOf(month) + 1).padStart(2, "0");
+        const dayPadded  = String(day).padStart(2, "0");
+        const dobStr     = `${year}-${monthIndex}-${dayPadded}`;
+        await fetch("/api/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: emailVal, dob: dobStr }),
+        });
         if (patientKey) localStorage.setItem(patientKey, patientId);
       }
 

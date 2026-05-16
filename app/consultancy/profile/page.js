@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { UserAPI } from "../../../lib/api";
 import { AppointmentService } from "../../../services/appointment.service";
 import { useSlots, useRescheduleConsultation, useAddFamilyMember, useRemoveFamilyMember } from "../../../hooks/useApi";
 import "./profile.css";
@@ -952,23 +951,21 @@ function MyProfilePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "personal");
-  const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [userRecord, setUserRecord] = useState(null);
+
+  // Personal info form state
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({ firstName: "", lastName: "", country: "", dob: "" });
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+
+  const email = typeof window !== "undefined" ? localStorage.getItem("userEmail") || "" : "";
+  const phone = typeof window !== "undefined" ? localStorage.getItem("userPhone") || "" : "";
 
   const handleLogout = () => {
-    // Clear all session keys from localStorage
-    const email = localStorage.getItem("userEmail") || "";
-    const keysToRemove = [
-      "accessToken",
-      "originToken",
-      "userEmail",
-      "userPhone",
-      "userName",
-      "userCountry",
-    ];
+    const keysToRemove = ["accessToken", "originToken", "userEmail", "userPhone", "userName", "userCountry"];
     keysToRemove.forEach((k) => localStorage.removeItem(k));
-    // Clear email-scoped keys
     if (email) {
       localStorage.removeItem(`meradocPatientId_${email}`);
       localStorage.removeItem(`meradocAppointmentId_${email}`);
@@ -976,28 +973,61 @@ function MyProfilePageInner() {
     router.push("/dashboard");
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        setIsLoading(true);
-        const response = await UserAPI.getUserProfile();
-        setProfileData(response.data || response);
-      } catch (err) {
-        console.warn("API token invalid or expired. Loading default user profile state.", err);
-        setProfileData({
-          firstName: "User",
-          lastName: "Name",
-          email: "user@desilink.com",
-          phone: "+1 555-0199",
-          dob: "1990-01-01",
-          bloodGroup: "O+",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+  const buildForm = (u) => {
+    const fullName = u?.name || localStorage.getItem("userName") || "";
+    const parts = fullName.trim().split(" ");
+    return {
+      firstName: parts[0] || "",
+      lastName: parts.slice(1).join(" ") || "",
+      country: u?.country || localStorage.getItem("userCountry") || "",
+      dob: u?.dob || "",
     };
-    fetchUser();
-  }, []);
+  };
+
+  useEffect(() => {
+    if (!email) { setIsLoading(false); return; }
+    fetch(`/api/users?email=${encodeURIComponent(email)}`)
+      .then((r) => r.json())
+      .then((json) => {
+        setUserRecord(json.user || null);
+        setFormData(buildForm(json.user));
+      })
+      .catch(() => setFormData(buildForm(null)))
+      .finally(() => setIsLoading(false));
+  }, [email]);
+
+  const handleFieldChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+    setSaving(true);
+    try {
+      await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name: fullName, country: formData.country }),
+      });
+      localStorage.setItem("userName", fullName);
+      localStorage.setItem("userCountry", formData.country);
+      setUserRecord((prev) => ({ ...prev, name: fullName, country: formData.country, dob: formData.dob, blood_group: formData.bloodGroup }));
+      setIsEditing(false);
+      setSaveMsg("Profile updated successfully.");
+      setTimeout(() => setSaveMsg(""), 3000);
+    } catch (err) {
+      console.error("Save failed:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setFormData(buildForm(userRecord));
+    setIsEditing(false);
+  };
 
   if (isLoading) {
     return (
@@ -1007,10 +1037,8 @@ function MyProfilePageInner() {
     );
   }
 
-  const firstName = profileData?.firstName || profileData?.name?.split(" ")[0] || "Guest";
-  const lastName = profileData?.lastName || profileData?.name?.split(" ")[1] || "User";
-  const email = profileData?.email || "n/a";
-  const phone = profileData?.phone || "n/a";
+  const firstName = formData.firstName || "Guest";
+  const lastName = formData.lastName || "";
 
   return (
     <div className="profile-container">
@@ -1113,60 +1141,104 @@ function MyProfilePageInner() {
             <>
               <div className="section-title">
                 Personal Information
-                <button className="btn-edit">Edit Profile</button>
+                {!isEditing && (
+                  <button className="btn-edit" onClick={() => setIsEditing(true)}>Edit Profile</button>
+                )}
               </div>
+
+              {saveMsg && (
+                <div className="apt-success-banner" style={{ marginBottom: "16px" }}>
+                  {Icons.checkCircle}
+                  <span>{saveMsg}</span>
+                </div>
+              )}
 
               <div className="avatar-section">
                 <div className="avatar-circle">{firstName.charAt(0).toUpperCase()}</div>
                 <div className="avatar-info">
                   <h3>{firstName} {lastName}</h3>
-                  <p>Member strictly verified</p>
-                  <button className="btn-photo">Change Photo</button>
+                  <p>Member verified</p>
                 </div>
               </div>
 
-              <form onSubmit={(e) => e.preventDefault()}>
+              <form onSubmit={handleSave}>
                 <div className="info-grid">
                   <div className="info-group">
                     <label>First Name</label>
-                    <input type="text" className="info-input" defaultValue={firstName} />
+                    <input
+                      type="text"
+                      name="firstName"
+                      className="info-input"
+                      value={formData.firstName}
+                      onChange={handleFieldChange}
+                      readOnly={!isEditing}
+                      style={!isEditing ? { background: "#f5f7fa", cursor: "default" } : {}}
+                    />
                   </div>
                   <div className="info-group">
                     <label>Last Name</label>
-                    <input type="text" className="info-input" defaultValue={lastName} />
+                    <input
+                      type="text"
+                      name="lastName"
+                      className="info-input"
+                      value={formData.lastName}
+                      onChange={handleFieldChange}
+                      readOnly={!isEditing}
+                      style={!isEditing ? { background: "#f5f7fa", cursor: "default" } : {}}
+                    />
                   </div>
                   <div className="info-group">
                     <label>Email Address</label>
-                    <input type="email" className="info-input" defaultValue={email} readOnly />
+                    <input
+                      type="email"
+                      className="info-input"
+                      value={email}
+                      readOnly
+                      style={{ background: "#f5f7fa", cursor: "not-allowed", color: "#6b7280" }}
+                    />
                   </div>
                   <div className="info-group">
                     <label>Mobile Number</label>
-                    <input type="tel" className="info-input" defaultValue={phone} readOnly />
+                    <input
+                      type="tel"
+                      className="info-input"
+                      value={phone}
+                      readOnly
+                      style={{ background: "#f5f7fa", cursor: "not-allowed", color: "#6b7280" }}
+                    />
+                  </div>
+                  <div className="info-group">
+                    <label>Country of Residence</label>
+                    <input
+                      type="text"
+                      name="country"
+                      className="info-input"
+                      value={formData.country}
+                      onChange={handleFieldChange}
+                      readOnly={!isEditing}
+                      style={!isEditing ? { background: "#f5f7fa", cursor: "default" } : {}}
+                    />
                   </div>
                   <div className="info-group">
                     <label>Date of Birth</label>
-                    <input type="date" className="info-input" defaultValue={profileData?.dob || "1990-01-01"} />
-                  </div>
-                  <div className="info-group">
-                    <label>Blood Group</label>
-                    <select className="info-input" defaultValue={profileData?.bloodGroup || "O+"}>
-                      <option value="">Select Blood Group</option>
-                      <option value="A+">A+</option>
-                      <option value="A-">A-</option>
-                      <option value="B+">B+</option>
-                      <option value="B-">B-</option>
-                      <option value="O+">O+</option>
-                      <option value="O-">O-</option>
-                      <option value="AB+">AB+</option>
-                      <option value="AB-">AB-</option>
-                    </select>
+                    <input
+                      type="date"
+                      className="info-input"
+                      value={formData.dob}
+                      readOnly
+                      style={{ background: "#f5f7fa", cursor: "not-allowed", color: "#6b7280" }}
+                    />
                   </div>
                 </div>
 
-                <div className="form-actions">
-                  <button type="button" className="btn-cancel">Cancel</button>
-                  <button type="submit" className="btn-save">Save Changes</button>
-                </div>
+                {isEditing && (
+                  <div className="form-actions">
+                    <button type="button" className="btn-cancel" onClick={handleCancel} disabled={saving}>Cancel</button>
+                    <button type="submit" className="btn-save" disabled={saving}>
+                      {saving ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                )}
               </form>
             </>
           )}
