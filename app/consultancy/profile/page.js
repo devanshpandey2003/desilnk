@@ -73,6 +73,48 @@ function formatTime(t) {
   return `${display}:${m} ${ampm}`;
 }
 
+function todayStr() { return new Date().toISOString().split("T")[0]; }
+function maxDateStr() {
+  const d = new Date(); d.setDate(d.getDate() + 30);
+  return d.toISOString().split("T")[0];
+}
+function hourFrom12(t12) {
+  if (!t12) return 0;
+  const parts = t12.trim().split(" ");
+  let h = parseInt((parts[0] || "").split(":")[0]) || 0;
+  if (parts[1]?.toUpperCase() === "PM" && h !== 12) h += 12;
+  if (parts[1]?.toUpperCase() === "AM" && h === 12) h = 0;
+  return h;
+}
+function groupLabSlots(slots) {
+  const g = { Morning: [], Afternoon: [], Evening: [] };
+  slots.forEach((s) => {
+    const h = s.startTime12hr ? hourFrom12(s.startTime12hr) : parseInt((s.startTime || "0").split(":")[0]);
+    if (h < 12) g.Morning.push(s);
+    else if (h < 17) g.Afternoon.push(s);
+    else g.Evening.push(s);
+  });
+  return g;
+}
+function to24h(t12) {
+  if (!t12) return "";
+  const parts = t12.trim().split(" ");
+  if (parts.length < 2) return t12;
+  const [time, period] = parts;
+  let [h, m] = time.split(":").map(Number);
+  if (period.toUpperCase() === "PM" && h !== 12) h += 12;
+  if (period.toUpperCase() === "AM" && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${String(m || 0).padStart(2, "0")}`;
+}
+function labSlotLabel(s) {
+  if (!s || typeof s !== "object") return String(s || "");
+  if (s.startTime12hr && s.endTime12hr) return `${s.startTime12hr} - ${s.endTime12hr}`;
+  return s.collectionSlotTime || s.displayTime || s.time || s.slotTime || s.label || s.startTime || "";
+}
+function labSlotId(s) {
+  return s?.id || s?.slot_id || s?.slotId || s?._id || s?.slotNo || "";
+}
+
 // ─── My Appointments Panel ────────────────────────────────────────────────────
 function MyAppointmentsPanel() {
   const [appointment, setAppointment] = useState(null);
@@ -489,127 +531,388 @@ const LAB_STEPS = [
   { key: "COMPLETED",        label: "Completed",              icon: "✅" },
 ];
 
-function LabTestsPanel() {
-  const [orderId, setOrderId] = useState("");
-  const [inputVal, setInputVal] = useState("");
-  const [order, setOrder] = useState(null);
-  const [fetching, setFetching] = useState(false);
-  const [fetchError, setFetchError] = useState("");
+const LAB_TERMINAL = ["CANCELLED", "COMPLETED", "REPORT_GENERATED"];
 
-  // On mount, restore last checked orderId from localStorage
+function LabOrderCard({ order, patientId, onCancelSuccess, onRescheduleSuccess }) {
+  // cancel state
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [cancelling,  setCancelling]  = useState(false);
+  const [cancelError, setCancelError] = useState("");
+
+  // reschedule state
+  const [showReschedule,  setShowReschedule]  = useState(false);
+  const [reschedDate,     setReschedDate]     = useState("");
+  const [slots,           setSlots]           = useState([]);
+  const [loadingSlots,    setLoadingSlots]    = useState(false);
+  const [chosenSlot,      setChosenSlot]      = useState(null);
+  const [rescheduling,    setRescheduling]    = useState(false);
+  const [reschedError,    setReschedError]    = useState("");
+  const [reschedSuccess,  setReschedSuccess]  = useState(false);
+
+  const raw          = order.raw_data?.data || order.raw_data || {};
+  const displayId    = raw.orderId || order.order_id;
+  const tests        = Array.isArray(raw.packageName) ? raw.packageName : (raw.packageName ? [raw.packageName] : []);
+  const date         = raw.sampleCollectionDate || raw.collectionDate || "";
+  const time         = raw.sampleCollectionTime || raw.collectionSlotTime || "";
+  const status       = (order.status || raw.orderStatus || raw.order_status || "").toUpperCase();
+  const isCancelled  = status.includes("CANCEL");
+  const isRescheduled = status === "RESCHEDULED";
+  const isTerminal   = isCancelled || ["COMPLETED", "REPORT_GENERATED"].includes(status);
+  const stepIndex    = isCancelled ? -1 : LAB_STEPS.findIndex((s) => s.key === status);
+  const isPastDate   = (() => {
+    if (!date) return false;
+    const endPart = time ? (time.includes(" - ") ? time.split(" - ")[1].trim() : time.trim()) : "";
+    const ampm = endPart.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (ampm) {
+      let h = parseInt(ampm[1]), m = parseInt(ampm[2]);
+      if (ampm[3].toUpperCase() === "PM" && h !== 12) h += 12;
+      if (ampm[3].toUpperCase() === "AM" && h === 12) h = 0;
+      const dt = new Date(date); dt.setHours(h, m, 0, 0); return dt < new Date();
+    }
+    const h24 = endPart.match(/(\d+):(\d+)/);
+    if (h24) {
+      const dt = new Date(date); dt.setHours(parseInt(h24[1]), parseInt(h24[2]), 0, 0); return dt < new Date();
+    }
+    return new Date(date + "T23:59:59") < new Date();
+  })();
+
+  // Fetch slots when date changes
   useEffect(() => {
-    const saved = localStorage.getItem("labTestOrderId");
-    if (saved) { setOrderId(saved); fetchOrder(saved); }
+    if (!reschedDate || !showReschedule) return;
+    setLoadingSlots(true); setSlots([]); setChosenSlot(null); setReschedError("");
+    const loc  = (() => { try { return JSON.parse(localStorage.getItem("ltLocation") || "null") || {}; } catch { return {}; } })();
+    const codes = Array.isArray(raw.packageCode) ? raw.packageCode : (raw.packageCode ? [raw.packageCode] : []);
+    const names = Array.isArray(raw.packageName) ? raw.packageName : (raw.packageName ? [raw.packageName] : []);
+    const testList = codes.length ? codes.map((c, i) => ({ id: c, type: "PACKAGE", name: names[i] || "" })) : [{ id: displayId, type: "PACKAGE", name: names[0] || "" }];
+
+    import("../../../services/diagnostic.service").then(({ DiagnosticService }) =>
+      DiagnosticService.getPhleboSlots({
+        date: reschedDate,
+        lat:     loc.lat  || "0",
+        long:    loc.long || loc.lon || "0",
+        zipcode: loc.pincode || "",
+        ...(loc.zoneId ? { zoneId: loc.zoneId } : {}),
+        patients: [{ name: raw.patientName || localStorage.getItem("userName") || "Patient", gender: (raw.gender || "Male").toUpperCase(), age: String(raw.age || 25), ageType: "YEAR" }],
+        testList,
+      })
+    ).then((data) => {
+      const rawData = data?.data;
+      let list = [];
+      if (Array.isArray(rawData)) list = rawData.flatMap((p) => Array.isArray(p.slots) ? p.slots : []);
+      else if (Array.isArray(rawData?.slots)) list = rawData.slots;
+      else if (Array.isArray(data?.slots)) list = data.slots;
+      setSlots(list);
+      if (!list.length) setReschedError("No slots available for this date. Try another.");
+    }).catch(() => setReschedError("Failed to load slots. Please try again."))
+      .finally(() => setLoadingSlots(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reschedDate, showReschedule]);
+
+  const handleCancel = async () => {
+    setCancelling(true); setCancelError("");
+    const effectivePid = patientId || raw.patientId || "";
+    try {
+      const { DiagnosticService } = await import("../../../services/diagnostic.service");
+      const { UserService }       = await import("../../../services/user.service");
+      await UserService.generateToken(); // ensure a fresh token is in localStorage before cancel
+      await DiagnosticService.cancelOrder({ orderId: displayId, patientId: effectivePid, cancelReason: "Patient request" });
+      setShowConfirm(false);
+      onCancelSuccess(order.order_id);
+    } catch (err) {
+      const msg = (err?.response?.data?.message || err.message || "").toLowerCase();
+      // "order cannot be cancelled" / "already cancelled" both mean MeraDoc considers it done
+      if (msg.includes("already cancel") || msg.includes("cannot be cancel")) {
+        setShowConfirm(false);
+        onCancelSuccess(order.order_id);
+      } else {
+        setCancelError(err?.response?.data?.message || err.message || "Cancellation failed. Please try again.");
+      }
+    } finally { setCancelling(false); }
+  };
+
+  const handleReschedule = async () => {
+    if (!chosenSlot) return;
+    setRescheduling(true); setReschedError("");
+    const effectivePid = patientId || raw.patientId || "";
+    try {
+      const { DiagnosticService } = await import("../../../services/diagnostic.service");
+      const { UserService }       = await import("../../../services/user.service");
+      await UserService.generateToken(); // ensure a fresh token is in localStorage before reschedule
+      await DiagnosticService.rescheduleOrder({
+        orderId:         displayId,
+        patientId:       effectivePid,
+        appointmentDate: reschedDate,
+        reasonKey:       "OTHER",
+        reasonText:      "Patient unavailable on original date",
+        slotDetails: {
+          slot_id:        String(labSlotId(chosenSlot) || "1"),
+          collectionSlot: to24h(chosenSlot.startTime12hr) || chosenSlot.startTime || labSlotLabel(chosenSlot),
+        },
+      });
+      setReschedSuccess(true);
+      setShowReschedule(false);
+      onRescheduleSuccess(order.order_id, reschedDate, labSlotLabel(chosenSlot));
+    } catch (err) {
+      const msg = (err?.response?.data?.message || err.message || "").toLowerCase();
+      if (msg.includes("already cancelled") || msg.includes("already canceled")) {
+        setShowReschedule(false);
+        onCancelSuccess(order.order_id);
+      } else {
+        setReschedError(err?.response?.data?.message || err.message || "Reschedule failed. Please try again.");
+      }
+    } finally { setRescheduling(false); }
+  };
+
+  return (
+    <div className="lab-tracker-card" style={{ marginBottom: "1rem" }}>
+      <div className="lab-tracker-head">
+        <div>
+          <p className="apt-meta-label">Order ID</p>
+          <p className="apt-meta-value apt-id-text">{displayId}</p>
+        </div>
+        {(date || reschedSuccess) && (
+          <div>
+            <p className="apt-meta-label">Collection Date</p>
+            <p className="apt-meta-value">{reschedSuccess ? reschedDate : date}{!reschedSuccess && time ? ` · ${time}` : ""}</p>
+          </div>
+        )}
+        <div>
+          <p className="apt-meta-label">Updated</p>
+          <p className="apt-meta-value">
+            {new Date(order.updated_at).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })}
+          </p>
+        </div>
+      </div>
+
+      {tests.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", margin: "0.5rem 0" }}>
+          {tests.map((t, i) => <span key={i} className="lt-partner-tag">{t}</span>)}
+        </div>
+      )}
+
+      {reschedSuccess && (
+        <div className="apt-success-banner" style={{ margin: "0.5rem 0" }}>
+          {Icons.checkCircle}<span>Order rescheduled to {reschedDate}!</span>
+        </div>
+      )}
+
+      {isCancelled ? (
+        <div className="lab-cancelled-card" style={{ marginTop: "0.5rem" }}>
+          <span>❌</span><span>Order Cancelled</span>
+        </div>
+      ) : isRescheduled ? (
+        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "8px", padding: "0.7rem 1rem", marginTop: "0.5rem", fontSize: "0.85rem", color: "#1e40af" }}>
+          🔄 <strong>Rescheduled</strong> — Sample collection on <strong>{date}</strong>{time ? ` · ${time}` : ""}
+        </div>
+      ) : (
+        <div className="lab-steps">
+          {LAB_STEPS.map((step, i) => {
+            const done    = i <= stepIndex;
+            const current = i === stepIndex;
+            return (
+              <div key={step.key} className={`lab-step ${done ? "done" : ""} ${current ? "current" : ""}`}>
+                <div className="lab-step-icon-wrap">
+                  <span className="lab-step-icon">{done ? "✓" : step.icon}</span>
+                  {i < LAB_STEPS.length - 1 && <div className={`lab-step-line ${done && i < stepIndex ? "done" : ""}`} />}
+                </div>
+                <p className="lab-step-label">{step.label}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Action buttons — for all non-terminal, non-past orders */}
+      {!isTerminal && !isPastDate && !reschedSuccess && (
+        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", flexWrap: "wrap" }}>
+          {!showReschedule && !showConfirm && (
+            <>
+              <button
+                className="btn-reschedule-apt"
+                style={{ fontSize: "0.82rem", padding: "0.4rem 0.9rem" }}
+                onClick={() => { setShowReschedule(true); setReschedDate(todayStr()); setSlots([]); setChosenSlot(null); setReschedError(""); }}
+              >
+                {Icons.refresh} Reschedule
+              </button>
+              <button
+                className="btn-cancel-apt"
+                style={{ fontSize: "0.82rem", padding: "0.4rem 0.9rem" }}
+                onClick={() => { setShowConfirm(true); setCancelError(""); }}
+              >
+                {Icons.xCircle} Cancel Order
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Reschedule panel */}
+      {showReschedule && !isTerminal && !isPastDate && (
+        <div className="reschedule-panel" style={{ marginTop: "0.75rem" }}>
+          <h4 className="reschedule-title">Select New Date &amp; Time</h4>
+
+          {/* Date chips — 7 days starting today */}
+          <div className="reschedule-dates">
+            {getNextDays(7).map((day) => (
+              <button
+                key={day.dateStr}
+                className={`date-chip ${reschedDate === day.dateStr ? "active" : ""}`}
+                onClick={() => { setReschedDate(day.dateStr); setChosenSlot(null); setReschedError(""); }}
+              >
+                <span className="date-chip-label">{day.label}</span>
+                <span className="date-chip-num">{day.dayNum}</span>
+                <span className="date-chip-month">{day.month}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Slot chips grouped by period */}
+          <div style={{ marginTop: "0.75rem", minHeight: "48px" }}>
+            {loadingSlots ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#6b7280", fontSize: "0.85rem" }}>
+                <div className="apt-spinner-sm" style={{ width: "16px", height: "16px", borderWidth: "2px" }} />
+                Loading available slots…
+              </div>
+            ) : slots.length === 0 ? (
+              <p className="slots-empty">No slots available for this date. Try another.</p>
+            ) : (
+              <div className="slot-groups">
+                {Object.entries(groupLabSlots(slots)).map(([period, periodSlots]) =>
+                  periodSlots.length > 0 ? (
+                    <div key={period} className="slot-group">
+                      <p className="slot-group-label">{period}</p>
+                      <div className="slot-chips">
+                        {periodSlots.map((s, i) => (
+                          <button
+                            key={i}
+                            className={`slot-chip ${chosenSlot && String(labSlotId(chosenSlot)) === String(labSlotId(s)) ? "active" : ""}`}
+                            onClick={() => setChosenSlot(s)}
+                          >
+                            {labSlotLabel(s)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null
+                )}
+              </div>
+            )}
+          </div>
+
+          {reschedError && <p style={{ color: "#dc2626", fontSize: "0.82rem", margin: "0.5rem 0 0" }}>{reschedError}</p>}
+
+          <div className="reschedule-actions" style={{ marginTop: "1rem" }}>
+            <button className="btn-dialog-keep" onClick={() => { setShowReschedule(false); setReschedError(""); }} disabled={rescheduling}>
+              Cancel
+            </button>
+            <button className="btn-confirm-reschedule" onClick={handleReschedule} disabled={!chosenSlot || rescheduling}>
+              {rescheduling ? "Rescheduling…" : "Confirm Reschedule"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel confirmation */}
+      {showConfirm && !isTerminal && !isPastDate && (
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "0.8rem 1rem", marginTop: "0.5rem" }}>
+          <p style={{ fontSize: "0.85rem", color: "#7f1d1d", marginBottom: "0.6rem" }}>
+            Are you sure you want to cancel order <strong>{displayId}</strong>? This cannot be undone.
+          </p>
+          {cancelError && <p style={{ color: "#dc2626", fontSize: "0.8rem", marginBottom: "0.5rem" }}>{cancelError}</p>}
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button className="btn-dialog-keep" style={{ padding: "0.35rem 0.8rem", fontSize: "0.82rem" }} onClick={() => setShowConfirm(false)} disabled={cancelling}>
+              Keep Order
+            </button>
+            <button className="btn-dialog-confirm" style={{ padding: "0.35rem 0.8rem", fontSize: "0.82rem" }} onClick={handleCancel} disabled={cancelling}>
+              {cancelling ? "Cancelling…" : "Yes, Cancel"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LabTestsPanel() {
+  const [orders,    setOrders]    = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState("");
+  const [patientId, setPatientId] = useState("");
+
+  useEffect(() => {
+    const email = localStorage.getItem("userEmail") || "";
+    if (!email) { setLoading(false); return; }
+
+    const pid = localStorage.getItem(`meradocPatientId_${email}`) || "";
+    setPatientId(pid);
+    if (!pid) {
+      fetch(`/api/meradoc/patient?email=${encodeURIComponent(email)}`)
+        .then((r) => r.json())
+        .then(({ patientId: fetchedPid }) => {
+          if (fetchedPid) {
+            localStorage.setItem(`meradocPatientId_${email}`, fetchedPid);
+            setPatientId(fetchedPid);
+          }
+        })
+        .catch(() => {});
+    }
+
+    // Fetch live order status from MeraDoc on every load
+    fetch(`/api/lab-test-status?email=${encodeURIComponent(email)}`)
+      .then((r) => r.json())
+      .then((json) => setOrders(json.orders || []))
+      .catch(() => setError("Failed to load lab test orders."))
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchOrder = async (id) => {
-    if (!id) return;
-    setFetching(true);
-    setFetchError("");
-    try {
-      const res = await fetch(`/api/lab-test-status?orderId=${encodeURIComponent(id)}`);
-      const json = await res.json();
-      setOrder(json.order || null);
-      if (!json.order) setFetchError("No lab test found for this Order ID.");
-    } catch (_) {
-      setFetchError("Failed to fetch status. Please try again.");
-    } finally {
-      setFetching(false);
-    }
+  const handleCancelSuccess = (orderId) => {
+    setOrders((prev) => prev.map((o) => o.order_id === orderId ? { ...o, status: "CANCELLED" } : o));
   };
 
-  const handleTrack = (e) => {
-    e.preventDefault();
-    if (!inputVal.trim()) return;
-    const id = inputVal.trim();
-    localStorage.setItem("labTestOrderId", id);
-    setOrderId(id);
-    fetchOrder(id);
+  const handleRescheduleSuccess = (orderId, newDate, newSlot) => {
+    setOrders((prev) => prev.map((o) => {
+      if (o.order_id !== orderId) return o;
+      const raw = o.raw_data?.data || o.raw_data || {};
+      return { ...o, raw_data: { ...o.raw_data, data: { ...raw, collectionDate: newDate, collectionSlotTime: newSlot } } };
+    }));
   };
 
-  const currentStepIndex = order
-    ? order.status === "CANCELLED"
-      ? -1
-      : LAB_STEPS.findIndex((s) => s.key === order.status)
-    : -2;
+  if (loading) {
+    return (
+      <div className="apt-panel-loading">
+        <div className="apt-spinner-sm" />
+        <p>Loading lab tests...</p>
+      </div>
+    );
+  }
 
-  const isCancelled = order?.status === "CANCELLED";
+  if (error) return <p className="lab-error">{error}</p>;
+
+  if (orders.length === 0) {
+    return (
+      <div className="apt-panel-empty">
+        <div className="apt-empty-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
+          </svg>
+        </div>
+        <h3>No Lab Tests</h3>
+        <p>Your booked lab tests will appear here automatically.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="lab-panel">
-      {/* Order ID lookup */}
-      <form className="lab-search-form" onSubmit={handleTrack}>
-        <div className="info-group" style={{ flex: 1 }}>
-          <label>Track by Order ID</label>
-          <input
-            className="info-input"
-            placeholder="Enter your lab test Order ID"
-            value={inputVal}
-            onChange={(e) => setInputVal(e.target.value)}
-          />
-        </div>
-        <button type="submit" className="btn-save lab-track-btn" disabled={fetching}>
-          {fetching ? "Tracking..." : "Track"}
-        </button>
-      </form>
-
-      {fetchError && <p className="lab-error">{fetchError}</p>}
-
-      {/* Status tracker */}
-      {order && !isCancelled && (
-        <div className="lab-tracker-card">
-          <div className="lab-tracker-head">
-            <div>
-              <p className="apt-meta-label">Order ID</p>
-              <p className="apt-meta-value apt-id-text">{order.order_id}</p>
-            </div>
-            <div>
-              <p className="apt-meta-label">Last Updated</p>
-              <p className="apt-meta-value">
-                {new Date(order.updated_at).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })}
-              </p>
-            </div>
-          </div>
-
-          <div className="lab-steps">
-            {LAB_STEPS.map((step, i) => {
-              const done    = i <= currentStepIndex;
-              const current = i === currentStepIndex;
-              return (
-                <div key={step.key} className={`lab-step ${done ? "done" : ""} ${current ? "current" : ""}`}>
-                  <div className="lab-step-icon-wrap">
-                    <span className="lab-step-icon">{done ? "✓" : step.icon}</span>
-                    {i < LAB_STEPS.length - 1 && <div className={`lab-step-line ${done && i < currentStepIndex ? "done" : ""}`} />}
-                  </div>
-                  <p className="lab-step-label">{step.label}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {order && isCancelled && (
-        <div className="lab-cancelled-card">
-          <span style={{ fontSize: "2rem" }}>❌</span>
-          <div>
-            <p className="apt-meta-value">Order Cancelled</p>
-            <p className="apt-meta-label">Order ID: {order.order_id}</p>
-          </div>
-        </div>
-      )}
-
-      {!order && !fetching && !fetchError && (
-        <div className="apt-panel-empty">
-          <div className="apt-empty-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
-            </svg>
-          </div>
-          <h3>No Lab Tests</h3>
-          <p>Enter your Order ID above to track your lab test status.</p>
-        </div>
-      )}
+      {orders.map((order) => (
+        <LabOrderCard
+          key={order.order_id}
+          order={order}
+          patientId={patientId}
+          onCancelSuccess={handleCancelSuccess}
+          onRescheduleSuccess={handleRescheduleSuccess}
+        />
+      ))}
     </div>
   );
 }
@@ -964,13 +1267,17 @@ function MyProfilePageInner() {
   const phone = typeof window !== "undefined" ? localStorage.getItem("userPhone") || "" : "";
 
   const handleLogout = () => {
-    const keysToRemove = ["accessToken", "originToken", "userEmail", "userPhone", "userName", "userCountry"];
+    const keysToRemove = [
+      "accessToken", "originToken", "userEmail", "userPhone", "userName", "userCountry",
+      "ltCart", "ltLocation", "ltDeliveryCity",
+    ];
     keysToRemove.forEach((k) => localStorage.removeItem(k));
     if (email) {
       localStorage.removeItem(`meradocPatientId_${email}`);
       localStorage.removeItem(`meradocAppointmentId_${email}`);
     }
-    router.push("/dashboard");
+    window.dispatchEvent(new Event("lt-nav-update"));
+    router.push("/login");
   };
 
   const buildForm = (u) => {

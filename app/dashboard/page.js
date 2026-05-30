@@ -51,15 +51,16 @@ export default function Dashboard() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [userName, setUserName] = useState("User");
 
-  // Load user name from local storage or URL if applicable (fallback to "User")
   useEffect(() => {
-    // Client-side execution
-    const params = new URLSearchParams(window.location.search);
-    const name = params.get("name");
-    if (name) {
-      setUserName(name);
+    const email = localStorage.getItem("userEmail");
+    if (!email) {
+      router.replace("/login");
+      return;
     }
-  }, []);
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get("name") || localStorage.getItem("userName") || "";
+    if (name) setUserName(name);
+  }, [router]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);

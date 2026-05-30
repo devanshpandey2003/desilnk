@@ -11,7 +11,7 @@ export async function GET(request) {
     }
 
     const rows = await sql`
-      SELECT email, phone, name, country FROM users WHERE email = ${email} LIMIT 1
+      SELECT email, phone, name, country, dob, gender FROM users WHERE email = ${email} LIMIT 1
     `;
 
     return NextResponse.json({ user: rows[0] || null });
@@ -23,7 +23,7 @@ export async function GET(request) {
 
 export async function PATCH(request) {
   try {
-    const { email, name, country, dob, bloodGroup } = await request.json();
+    const { email, name, country, dob, bloodGroup, gender } = await request.json();
 
     if (!email) {
       return NextResponse.json({ error: "email required" }, { status: 400 });
@@ -32,13 +32,15 @@ export async function PATCH(request) {
     // Add optional columns if they don't exist yet
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS dob TEXT`;
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS blood_group TEXT`;
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT`;
 
     await sql`
       UPDATE users
       SET name        = COALESCE(${name ?? null}, name),
           country     = COALESCE(${country ?? null}, country),
-          dob         = ${dob ?? null},
-          blood_group = ${bloodGroup ?? null}
+          dob         = COALESCE(${dob ?? null}, dob),
+          blood_group = COALESCE(${bloodGroup ?? null}, blood_group),
+          gender      = COALESCE(${gender ?? null}, gender)
       WHERE email = ${email}
     `;
 

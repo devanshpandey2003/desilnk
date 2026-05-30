@@ -58,6 +58,12 @@
   color: #1a4fd4;
 }
 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .nav-right .btn-get-started {
   background: #0f3d6e;
   color: white;
@@ -1187,4 +1193,81 @@
 
 .btn-submit:hover {
   background: #0f518e;
+}
+
+/* ── Nav cart + address (lab-tests / medicines only) ── */
+.nav-address-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  text-decoration: none;
+  color: #1a1f36;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  transition: border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.nav-address-pill:hover { border-color: #1a4fd4; background: #f0f4ff; }
+.nav-address-pill svg   { color: #1a4fd4; flex-shrink: 0; }
+.nav-address-label      { display: block; color: #6b7280; font-size: 0.72rem; }
+.nav-address-pill strong{ display: block; color: #1a1f36; font-size: 0.85rem; }
+
+.nav-cart-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid #e2e8f0;
+  color: #1a1f36;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.nav-cart-btn:hover   { border-color: #1a4fd4; background: #f0f4ff; }
+.nav-cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #fff;
+}
+
+/* ── Cart page tabs ── */
+.cart-tabs {
+  display: flex;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+.cart-tab {
+  flex: 1;
+  padding: 0.9rem 1rem;
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.cart-tab.active {
+  color: #1a4fd4;
+  border-bottom-color: #1a4fd4;
+  font-weight: 600;
 }

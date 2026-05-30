@@ -4,7 +4,13 @@
       "Bash(npm install *)",
       "Bash(node --experimental-vm-modules scripts/setup-db.js)",
       "Bash(node --input-type=module --experimental-vm-modules)",
-      "Bash(node scripts/setup-db.js)"
+      "Bash(node scripts/setup-db.js)",
+      "Bash(curl -s --location \"https://apidev.meradoc.com/pharmacy/api/v1/diagnostic/tenant/getPhleboSlots\" --header \"originToken: ea905fcbecccb788fdde2651cf4ff7d1\" --header \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MDIwOGEzYmY0ZTFjMTQzNjdlNzNkYyIsImNsaWVudElkIjoiUFZNRC0wMSIsInJlZmVycmFsQ29kZSI6IlByYXZhc2kiLCJ0eXBlIjoiVEVOQU5UIiwiU1NPX0xPR0lOIjpmYWxzZSwic2Vzc2lvbklkIjoiNmEwZmU0NTVjM2E4ZWEwMDEyMjcwMjIyIiwidmlkZW9DYWxsUm9vbVRlbXBsYXRlSWQiOiIiLCJkb2N0b3JWaXNpYmlsaXR5IjoiYm90aCIsImlhdCI6MTc3OTQyNjM4OSwiZXhwIjoxNzc5NDI5OTg5fQ.w5AsN6gIDhlB1YznR5Ot3D2H4SeN9AbG5Eq-TEjP4-0\" --header \"Content-Type: application/json\" --data \"{\\\\\"date\\\\\":\\\\\"2026-05-24\\\\\",\\\\\"lat\\\\\":\\\\\"28.8467921\\\\\",\\\\\"long\\\\\":\\\\\"77.5710399\\\\\",\\\\\"zipcode\\\\\":\\\\\"201204\\\\\",\\\\\"patients\\\\\":[{\\\\\"name\\\\\":\\\\\"Gaurav Jadhav\\\\\",\\\\\"gender\\\\\":\\\\\"MALE\\\\\",\\\\\"age\\\\\":\\\\\"23\\\\\",\\\\\"ageType\\\\\":\\\\\"YEAR\\\\\"}],\\\\\"testList\\\\\":[{\\\\\"id\\\\\":\\\\\"package_102\\\\\",\\\\\"type\\\\\":\\\\\"PACKAGE\\\\\",\\\\\"name\\\\\":\\\\\"Female Preventive Package-old\\\\\"}],\\\\\"zoneId\\\\\":\\\\\"184\\\\\"}\")",
+      "Bash(curl -s --location --request POST \"https://apidev.meradoc.com/user/api/v1/sso/tenant\" --header \"x-api-id: PVMD-01\" --header \"x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu\" --header \"originToken: ea905fcbecccb788fdde2651cf4ff7d1\")",
+      "Bash(curl -s -X POST https://apidev.meradoc.com/user/api/v1/sso/tenant -H 'Content-Type: application/json' -H 'x-api-id: PVMD-01' -H 'x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu' -d '{\"originToken\":\"ea905fcbecccb788fdde2651cf4ff7d1\"}')",
+      "Bash(python -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(DATABASE_URL='postgresql://neondb_owner:npg_pc6bYfxNUH9t@ep-misty-star-adp5cj6e.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require' node -e ' *)"
     ]
   }
 }

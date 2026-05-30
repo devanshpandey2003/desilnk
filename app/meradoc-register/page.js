@@ -39,9 +39,22 @@ export default function MeraDocRegisterPage() {
     const savedPhone = localStorage.getItem("userPhone") || "";
     setEmail(savedEmail);
     setName(savedName);
-    // Strip country code prefix for display (e.g. "+91 9876543210" → "9876543210")
     setPhone(savedPhone.replace(/^\+\d+\s?/, ""));
-  }, []);
+
+    // Auto-redirect if already registered in MeraDoc
+    if (savedEmail) {
+      fetch(`/api/meradoc/patient?email=${encodeURIComponent(savedEmail)}`)
+        .then((r) => r.json())
+        .then((json) => {
+          if (json.patientId) {
+            const key = `meradocPatientId_${savedEmail}`;
+            localStorage.setItem(key, json.patientId);
+            router.replace("/consultancy");
+          }
+        })
+        .catch(() => {});
+    }
+  }, [router]);
 
   const isValid =
     email.trim() && /^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$/.test(email.trim()) &&
@@ -92,28 +105,47 @@ export default function MeraDocRegisterPage() {
       const patientId = response?.data?._id;
       if (patientId) {
         localStorage.setItem("userEmail", emailVal);
+        localStorage.setItem("userGender", gender);
         // Save patientId to DB
         await fetch("/api/meradoc/patient", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: emailVal, patientId }),
         });
-        // Save DOB to users table
+        // Save DOB + gender to users table
         const monthIndex = String(MONTHS.indexOf(month) + 1).padStart(2, "0");
         const dayPadded  = String(day).padStart(2, "0");
         const dobStr     = `${year}-${monthIndex}-${dayPadded}`;
         await fetch("/api/users", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: emailVal, dob: dobStr }),
+          body: JSON.stringify({ email: emailVal, dob: dobStr, gender }),
         });
         if (patientKey) localStorage.setItem(patientKey, patientId);
       }
 
       router.push("/consultancy");
     } catch (err) {
-      console.error("MeraDoc registration failed:", err?.response?.data || err.message);
-      setError(err?.response?.data?.message || err?.response?.data?.error || "Something went wrong. Please try again.");
+      const errData = err?.response?.data;
+      console.error("MeraDoc registration failed:", errData || err.message);
+
+      // MeraDoc may return the existing patient inside the error body if email
+      // already exists on their side but our DB is missing the link.
+      const existingId = errData?.data?._id || errData?._id || errData?.patientId;
+      if (existingId) {
+        const emailVal  = email.trim();
+        const patientKey = emailVal ? `meradocPatientId_${emailVal}` : null;
+        await fetch("/api/meradoc/patient", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: emailVal, patientId: existingId }),
+        });
+        if (patientKey) localStorage.setItem(patientKey, existingId);
+        router.push("/consultancy");
+        return;
+      }
+
+      setError(errData?.message || errData?.error || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

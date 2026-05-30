@@ -1,13 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "./consultancy.css";
 
 export default function ConsultancyLayout({ children }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpen,    setMobileOpen]    = useState(false);
+  const [cartCount,     setCartCount]     = useState(0);
+  const [deliveryCity,  setDeliveryCity]  = useState("");
   const pathname = usePathname();
+
+
+  // Derive cart count directly from ltCart array so it survives navigation
+  useEffect(() => {
+    const sync = () => {
+      try { const c = JSON.parse(localStorage.getItem("ltCart") || "[]"); setCartCount(c.length); } catch { setCartCount(0); }
+      setDeliveryCity(localStorage.getItem("ltDeliveryCity") || "");
+    };
+    sync();
+    window.addEventListener("lt-nav-update", sync);
+    window.addEventListener("storage",       sync); // sync across tabs
+    return () => {
+      window.removeEventListener("lt-nav-update", sync);
+      window.removeEventListener("storage",       sync);
+    };
+  }, []);
 
   const navLinks = [
     { href: "/consultancy/book-consultation", label: "Consultations" },
@@ -32,7 +50,7 @@ export default function ConsultancyLayout({ children }) {
               <Link
                 key={l.href}
                 href={l.href}
-                className={pathname?.startsWith(l.href) ? "active" : ""}
+                className={pathname === l.href ? "active" : ""}
               >
                 {l.label}
               </Link>
@@ -40,7 +58,24 @@ export default function ConsultancyLayout({ children }) {
           </div>
         </div>
         <div className="nav-right">
-          <button className="btn-get-started">Get Started</button>
+          {/* Delivery address pill */}
+          <Link
+            href="/consultancy/lab-tests/address"
+            className="nav-address-pill"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>
+              <span className="nav-address-label">Deliver to</span>
+              <strong>{deliveryCity || "Set address"}</strong>
+            </span>
+          </Link>
+
+          {/* Cart icon */}
+          <Link href="/consultancy/cart" className="nav-cart-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            {cartCount > 0 && <span className="nav-cart-badge">{cartCount}</span>}
+          </Link>
+
           <button
             className="mobile-menu-btn"
             onClick={() => setMobileOpen((o) => !o)}
@@ -66,7 +101,7 @@ export default function ConsultancyLayout({ children }) {
             <Link
               key={l.href}
               href={l.href}
-              className={`mobile-nav-link${pathname?.startsWith(l.href) ? " active" : ""}`}
+              className={`mobile-nav-link${pathname === l.href ? " active" : ""}`}
               onClick={() => setMobileOpen(false)}
             >
               {l.label}
