@@ -33,25 +33,30 @@ const VALID_EMAIL = /^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$/;
 export default function CreateAccountPage() {
   const router = useRouter();
 
-  /* form state */
+  /* mode */
+  const [mode, setMode] = useState("signin"); // "signin" | "register"
+
+  /* shared */
   const [email, setEmail] = useState("");
+
+  /* register only */
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState(COUNTRIES[0]);
-
-  /* modal state */
   const [pickerOpen, setPickerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const searchRef = useRef(null);
 
-  /* focus the search box when modal opens */
+  /* async state */
+  const [checking, setChecking] = useState(false);
+  const [signinError, setSigninError] = useState("");
+
   useEffect(() => {
     if (pickerOpen && searchRef.current) searchRef.current.focus();
   }, [pickerOpen]);
 
-  /* validation */
-  const isValid = email.trim() !== "" && VALID_EMAIL.test(email.trim()) && phone.trim() !== "";
+  /* reset error when email changes */
+  useEffect(() => { setSigninError(""); }, [email]);
 
-  /* filtered country list */
   const filtered = search
     ? COUNTRIES.filter(
         (c) =>
@@ -60,34 +65,52 @@ export default function CreateAccountPage() {
       )
     : COUNTRIES;
 
-  const [checking, setChecking] = useState(false);
-
-  /* handlers */
-  const handleContinue = async () => {
+  /* ── Sign In ── */
+  const handleSignIn = async () => {
     const trimmedEmail = email.trim();
-    const fullPhone = `${country.code} ${phone}`;
+    if (!trimmedEmail || !VALID_EMAIL.test(trimmedEmail)) return;
+    setChecking(true);
+    setSigninError("");
+    try {
+      const res  = await fetch(`/api/users?email=${encodeURIComponent(trimmedEmail)}`);
+      const data = await res.json();
+      if (data.user) {
+        localStorage.setItem("userEmail",   trimmedEmail);
+        localStorage.setItem("userPhone",   data.user.phone   || "");
+        localStorage.setItem("userName",    data.user.name    || "");
+        localStorage.setItem("userCountry", data.user.country || "");
+        router.push(`/dashboard?name=${encodeURIComponent(data.user.name || "")}`);
+      } else {
+        setSigninError("No account found with this email. Please create an account.");
+      }
+    } catch {
+      setSigninError("Something went wrong. Please try again.");
+    } finally {
+      setChecking(false);
+    }
+  };
 
+  /* ── Register ── */
+  const isRegisterValid = email.trim() !== "" && VALID_EMAIL.test(email.trim()) && phone.trim() !== "";
+
+  const handleRegister = async () => {
+    const trimmedEmail = email.trim();
+    const fullPhone    = `${country.code} ${phone}`;
     setChecking(true);
     try {
-      const res = await fetch(`/api/users?email=${encodeURIComponent(trimmedEmail)}`);
+      const res  = await fetch(`/api/users?email=${encodeURIComponent(trimmedEmail)}`);
       const data = await res.json();
-
       if (data.user) {
-        // Returning user — restore their data and go straight to dashboard
-        localStorage.setItem("userEmail", trimmedEmail);
-        localStorage.setItem("userPhone", data.user.phone || fullPhone);
-        localStorage.setItem("userName", data.user.name || "");
+        localStorage.setItem("userEmail",   trimmedEmail);
+        localStorage.setItem("userPhone",   data.user.phone || fullPhone);
+        localStorage.setItem("userName",    data.user.name  || "");
         localStorage.setItem("userCountry", data.user.country || "");
         router.push(`/dashboard?name=${encodeURIComponent(data.user.name || "")}`);
         return;
       }
-    } catch (err) {
-      console.error("User lookup failed:", err);
-    } finally {
-      setChecking(false);
-    }
+    } catch {}
+    finally { setChecking(false); }
 
-    // New user — proceed with onboarding
     localStorage.setItem("userEmail", trimmedEmail);
     localStorage.setItem("userPhone", fullPhone);
     router.push(`/login/verify?phone=${encodeURIComponent(fullPhone)}`);
@@ -99,94 +122,155 @@ export default function CreateAccountPage() {
     setPickerOpen(false);
   };
 
-  /* step progress (step 2 / 7) */
-  const currentStep = 2;
-  const totalSteps = 7;
+  const switchMode = (m) => {
+    setMode(m);
+    setEmail("");
+    setPhone("");
+    setSigninError("");
+  };
 
   return (
     <div className="create-account">
       <div className="create-account-inner">
-        {/* ── Progress bar ── */}
-        <div className="progress-bar-track">
-          <div
-            className="progress-bar-done"
-            style={{ flex: currentStep - 1 }}
-          />
-          <div
-            className="progress-bar-remaining"
-            style={{ flex: totalSteps - (currentStep - 1) }}
-          />
-        </div>
 
-        <p className="step-label">Step {currentStep} of {totalSteps}</p>
-        <div className="divider" />
+        {/* ── Progress bar (only for register) ── */}
+        {mode === "register" && (
+          <>
+            <div className="progress-bar-track">
+              <div className="progress-bar-done"    style={{ flex: 1 }} />
+              <div className="progress-bar-remaining" style={{ flex: 6 }} />
+            </div>
+            <p className="step-label">Step 2 of 7</p>
+            <div className="divider" />
+          </>
+        )}
 
-        {/* ── Centered form ── */}
-        <div className="form-area">
-          <h1>Create your account</h1>
-          <p className="subtitle">Let&apos;s get you connected to home</p>
+        <div className="form-area" style={mode === "signin" ? { justifyContent: "center" } : {}}>
 
-          {/* Email */}
-          <div className="input-group">
-            <label htmlFor="email-input">Email address</label>
-            <input
-              id="email-input"
-              className="input-box"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+          {/* ── Mode toggle ── */}
+          <div className="auth-toggle">
+            <button
+              className={`auth-toggle-btn ${mode === "signin" ? "active" : ""}`}
+              onClick={() => switchMode("signin")}
+            >
+              Sign In
+            </button>
+            <button
+              className={`auth-toggle-btn ${mode === "register" ? "active" : ""}`}
+              onClick={() => switchMode("register")}
+            >
+              Create Account
+            </button>
           </div>
 
-          {/* Phone */}
-          <div className="input-group">
-            <label htmlFor="phone-input">Phone number</label>
-            <div className="phone-row">
+          {/* ── Sign In mode ── */}
+          {mode === "signin" && (
+            <>
+              <h1 style={{ marginTop: "28px" }}>Welcome back</h1>
+              <p className="subtitle">Sign in with your registered email</p>
+
+              <div className="input-group">
+                <label htmlFor="signin-email">Email address</label>
+                <input
+                  id="signin-email"
+                  className={`input-box ${signinError ? "input-box-error" : ""}`}
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+                />
+              </div>
+
+              {signinError && (
+                <p className="auth-error">{signinError}</p>
+              )}
+
               <button
-                type="button"
-                className="country-picker-btn"
-                onClick={() => setPickerOpen(true)}
-                aria-label="Select country code"
+                className="btn-continue"
+                disabled={!email.trim() || !VALID_EMAIL.test(email.trim()) || checking}
+                onClick={handleSignIn}
               >
-                <span className="flag">{country.flag}</span>
-                <span className="code">{country.code}</span>
-                <span className="arrow">▼</span>
+                {checking ? "Signing in…" : "Sign In"}
               </button>
 
-              <input
-                id="phone-input"
-                className="phone-input"
-                type="tel"
-                placeholder="Enter phone number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-          </div>
+              <div className="bottom-divider" />
+              <p className="auth-switch-text">
+                New here?{" "}
+                <button className="auth-link-btn" onClick={() => switchMode("register")}>
+                  Create an account
+                </button>
+              </p>
+            </>
+          )}
 
-          {/* Terms */}
-          <p className="terms-text">
-            By continuing, you agree to our{" "}
-            <a href="#">Terms of Service</a> and{" "}
-            <a href="#">Privacy Policy</a>
-          </p>
+          {/* ── Create Account mode ── */}
+          {mode === "register" && (
+            <>
+              <h1>Create your account</h1>
+              <p className="subtitle">Let&apos;s get you connected to home</p>
 
-          {/* Continue */}
-          <button
-            className="btn-continue"
-            disabled={!isValid || checking}
-            onClick={handleContinue}
-          >
-            {checking ? "Checking..." : "Continue"}
-          </button>
+              <div className="input-group">
+                <label htmlFor="email-input">Email address</label>
+                <input
+                  id="email-input"
+                  className="input-box"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
 
-          <div className="bottom-divider" />
+              <div className="input-group">
+                <label htmlFor="phone-input">Phone number</label>
+                <div className="phone-row">
+                  <button
+                    type="button"
+                    className="country-picker-btn"
+                    onClick={() => setPickerOpen(true)}
+                    aria-label="Select country code"
+                  >
+                    <span className="flag">{country.flag}</span>
+                    <span className="code">{country.code}</span>
+                    <span className="arrow">▼</span>
+                  </button>
+                  <input
+                    id="phone-input"
+                    className="phone-input"
+                    type="tel"
+                    placeholder="Enter phone number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+              </div>
 
-          {/* Back */}
-          <button className="btn-back" onClick={() => router.push("/")}>
-            Back
-          </button>
+              <p className="terms-text">
+                By continuing, you agree to our{" "}
+                <a href="#">Terms of Service</a> and{" "}
+                <a href="#">Privacy Policy</a>
+              </p>
+
+              <button
+                className="btn-continue"
+                disabled={!isRegisterValid || checking}
+                onClick={handleRegister}
+              >
+                {checking ? "Checking…" : "Continue"}
+              </button>
+
+              <div className="bottom-divider" />
+              <p className="auth-switch-text">
+                Already have an account?{" "}
+                <button className="auth-link-btn" onClick={() => switchMode("signin")}>
+                  Sign in
+                </button>
+              </p>
+            </>
+          )}
+
+          <button className="btn-back" onClick={() => router.push("/")}>Back</button>
         </div>
       </div>
 
@@ -194,25 +278,13 @@ export default function CreateAccountPage() {
       {pickerOpen && (
         <div
           className="modal-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setPickerOpen(false);
-              setSearch("");
-            }
-          }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setPickerOpen(false); setSearch(""); } }}
         >
           <div className="modal-sheet">
             <div className="modal-header">
-              <button
-                className="modal-close"
-                onClick={() => { setPickerOpen(false); setSearch(""); }}
-                aria-label="Close"
-              >
-                ✕
-              </button>
+              <button className="modal-close" onClick={() => { setPickerOpen(false); setSearch(""); }}>✕</button>
               <h2>Select Country</h2>
             </div>
-
             <div className="modal-search">
               <input
                 ref={searchRef}
@@ -222,7 +294,6 @@ export default function CreateAccountPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-
             <ul className="country-list">
               {filtered.map((c, i) => (
                 <li

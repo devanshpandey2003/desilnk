@@ -130,15 +130,16 @@ function CartView({ tab, labCart, setLabCart, location, onProceed }) {
 
 // ── Slot Selection View ───────────────────────────────────────────────────────
 function SlotView({ labCart, location, profile, onConfirm, onBack }) {
-  const [date,       setDate]       = useState("");
-  const [slots,      setSlots]      = useState([]);
-  const [chosenSlot, setChosenSlot] = useState(null);
-  const [loadSlots,  setLoadSlots]  = useState(false);
-  const [error,      setError]      = useState("");
+  const [date,            setDate]            = useState("");
+  const [slots,           setSlots]           = useState([]);
+  const [chosenSlot,      setChosenSlot]      = useState(null);
+  const [loadSlots,       setLoadSlots]       = useState(false);
+  const [error,           setError]           = useState("");
+  const [notServiceable,  setNotServiceable]  = useState(false);
 
   useEffect(() => {
     if (!date || !labCart.length) return;
-    setLoadSlots(true); setError(""); setSlots([]); setChosenSlot(null);
+    setLoadSlots(true); setError(""); setSlots([]); setChosenSlot(null); setNotServiceable(false);
     DiagnosticService.getPhleboSlots({
       date, lat: location.lat, long: location.long, zipcode: location.pincode,
       ...(location.zoneId ? { zoneId: location.zoneId } : {}),
@@ -148,6 +149,9 @@ function SlotView({ labCart, location, profile, onConfirm, onBack }) {
       const rawData = data?.data;
       let list = [];
       if (Array.isArray(rawData)) {
+        // Check if ALL partners are non-serviceable
+        const allNotServiceable = rawData.length > 0 && rawData.every((p) => p.serviceable === false);
+        if (allNotServiceable) { setNotServiceable(true); return; }
         list = rawData.flatMap((p) => Array.isArray(p.slots) ? p.slots : []);
       } else if (Array.isArray(rawData?.slots)) {
         list = rawData.slots;
@@ -185,7 +189,20 @@ function SlotView({ labCart, location, profile, onConfirm, onBack }) {
             </select>
           )}
         </div>
-        {error && !loadSlots && <p className="lt-error">{error}</p>}
+        {notServiceable && !loadSlots && (
+          <div style={{ background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "10px", padding: "0.9rem 1rem", marginTop: "0.5rem" }}>
+            <p style={{ fontWeight: 600, color: "#92400e", margin: "0 0 0.3rem", fontSize: "0.9rem" }}>
+              📍 Lab tests not available at your location
+            </p>
+            <p style={{ color: "#78350f", fontSize: "0.82rem", margin: "0 0 0.6rem" }}>
+              Home collection is not currently available at <strong>{location.city || "your selected address"}</strong>. Please change your delivery address to a serviceable city.
+            </p>
+            <Link href="/consultancy/lab-tests" style={{ fontSize: "0.82rem", color: "#1a4fd4", fontWeight: 600 }}>
+              Change Address →
+            </Link>
+          </div>
+        )}
+        {error && !loadSlots && !notServiceable && <p className="lt-error">{error}</p>}
       </div>
 
       <div className="lt-cart-footer">
