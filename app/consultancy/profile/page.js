@@ -583,7 +583,8 @@ function LabOrderCard({ order, patientId, onCancelSuccess, onRescheduleSuccess }
     const loc  = (() => { try { return JSON.parse(localStorage.getItem("ltLocation") || "null") || {}; } catch { return {}; } })();
     const codes = Array.isArray(raw.packageCode) ? raw.packageCode : (raw.packageCode ? [raw.packageCode] : []);
     const names = Array.isArray(raw.packageName) ? raw.packageName : (raw.packageName ? [raw.packageName] : []);
-    const testList = codes.length ? codes.map((c, i) => ({ id: c, type: "PACKAGE", name: names[i] || "" })) : [{ id: displayId, type: "PACKAGE", name: names[0] || "" }];
+    const ptype = raw.productType || "PACKAGE";
+    const testList = codes.length ? codes.map((c, i) => ({ id: c, type: ptype, name: names[i] || "" })) : [{ id: displayId, type: ptype, name: names[0] || "" }];
 
     import("../../../services/diagnostic.service").then(({ DiagnosticService }) =>
       DiagnosticService.getPhleboSlots({

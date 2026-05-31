@@ -144,7 +144,7 @@ function SlotView({ labCart, location, profile, onConfirm, onBack }) {
       date, lat: location.lat, long: location.long, zipcode: location.pincode,
       ...(location.zoneId ? { zoneId: location.zoneId } : {}),
       patients: [{ name: profile?.name || "Patient", gender: (profile?.gender || "Male").toUpperCase(), age: String(profile?.age || 25), ageType: "YEAR" }],
-      testList: labCart.map((t) => ({ id: t._id || t.id, type: t.type || "PACKAGE", name: t.name || "" })),
+      testList: labCart.map((t) => ({ id: t.id || t._id || t.packageCode || t.offerId || "", type: t.productType || t.type || "PACKAGE", name: t.name || "" })),
     }).then((data) => {
       const rawData = data?.data;
       let list = [];
@@ -277,10 +277,10 @@ function CheckoutView({ labCart, location, slotInfo, profile, onDone, onBack }) 
         city:               location.city  || "",
         state:              location.state || "",
         pincode:            location.pincode,
-        offerId:            firstTest.offerId || firstTest.packageCode || firstTest._id || "",
-        productType:        firstTest.productType || "SSKU",
+        offerId:            firstTest.offerId || firstTest.packageCode || firstTest.id || firstTest._id || "",
+        productType:        firstTest.productType || "PACKAGE",
         packageName:        labCart.map((t) => t.name || t.packageName || ""),
-        packageCode:        labCart.map((t) => t.packageCode || t.offerId || t._id || ""),
+        packageCode:        labCart.map((t) => t.packageCode || t.offerId || t.id || t._id || ""),
         collectionDate:     slotInfo.collectionDate,
         collectionSlotTime: slotInfo.collectionSlotTime,
         mrp:                totalMrp,
