@@ -19,8 +19,6 @@ function ageFromDob(dob) {
 }
 function tomorrow() { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; }
 function maxDate()   { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split("T")[0]; }
-// MeraDoc expects DD-MM-YYYY; input[type=date] gives YYYY-MM-DD
-function toApiDate(d) { return d ? d.split("-").reverse().join("-") : d; }
 function fmtDate(str) {
   if (!str) return "";
   return new Date(str + "T00:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -32,7 +30,7 @@ const slotLabel = (s) => {
   if (s.startTime12hr && s.endTime12hr) return `${s.startTime12hr} - ${s.endTime12hr}`;
   return s.collectionSlotTime || s.displayTime || s.time || s.slotTime || s.slot || s.label || s.name || s.startTime || JSON.stringify(s);
 };
-const slotId = (s) => s.id || s.slot_id || s.slotId || s._id || s.slotNo || s.slotNumber;
+const slotId = (s) => s.slotId || s.slot_id || s._id || s.slotNo || s.slotNumber || s.id;
 
 // ── Cart Items View ───────────────────────────────────────────────────────────
 function CartView({ tab, labCart, setLabCart, location, onProceed }) {
@@ -146,7 +144,7 @@ function SlotView({ labCart, location, profile, onConfirm, onBack }) {
       date, lat: location.lat, long: location.long, zipcode: location.pincode,
       ...(location.zoneId ? { zoneId: location.zoneId } : {}),
       patients: [{ name: profile?.name || "Patient", gender: (profile?.gender || "Male").toUpperCase(), age: String(profile?.age || 25), ageType: "YEAR" }],
-      testList: labCart.map((t) => ({ id: t.id || t._id || t.packageCode || t.offerId || "", type: t.productType || t.type || "PACKAGE", name: t.name || "" })),
+      testList: labCart.map((t) => ({ id: t.id || t._id || t.packageCode || t.offerId || "", type: "PACKAGE", name: t.name || "" })),
     }).then((data) => {
       const rawData = data?.data;
       let list = [];
@@ -283,7 +281,7 @@ function CheckoutView({ labCart, location, slotInfo, profile, onDone, onBack }) 
         productType:        firstTest.productType || "PACKAGE",
         packageName:        labCart.map((t) => t.name || t.packageName || ""),
         packageCode:        labCart.map((t) => t.packageCode || t.offerId || t.id || t._id || ""),
-        collectionDate:     toApiDate(slotInfo.collectionDate),
+        collectionDate:     slotInfo.collectionDate,
         collectionSlotTime: slotInfo.collectionSlotTime,
         mrp:                totalMrp,
         discountedPrice:    String(orderTotal),
