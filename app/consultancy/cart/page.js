@@ -140,26 +140,33 @@ function SlotView({ labCart, location, profile, onConfirm, onBack }) {
   useEffect(() => {
     if (!date || !labCart.length) return;
     setLoadSlots(true); setError(""); setSlots([]); setChosenSlot(null); setNotServiceable(false);
+    const cartPartner = labCart[0]?.partner || "";
+    // Use partner-specific zoneId when available, fall back to top-level
+    const effectiveZoneId = location.zoneId
+      || (location.partners || []).find((p) => p.zoneId)?.zoneId
+      || "";
     DiagnosticService.getPhleboSlots({
       date, lat: location.lat, long: location.long, zipcode: location.pincode,
-      ...(location.zoneId ? { zoneId: location.zoneId } : {}),
+      ...(effectiveZoneId ? { zoneId: effectiveZoneId } : {}),
       patients: [{ name: profile?.name || "Patient", gender: (profile?.gender || "Male").toUpperCase(), age: String(profile?.age || 25), ageType: "YEAR" }],
       testList: labCart.map((t) => ({ id: t.id || t._id || t.packageCode || t.offerId || "", type: "PACKAGE", name: t.name || "" })),
     }).then((data) => {
       const rawData = data?.data;
       let list = [];
       if (Array.isArray(rawData)) {
-        // Check if ALL partners are non-serviceable
-        const allNotServiceable = rawData.length > 0 && rawData.every((p) => p.serviceable === false);
+        // Only look at the partner matching the cart items — prevents slotId mismatch at booking
+        const partnerRow = cartPartner ? rawData.find((p) => p.partner === cartPartner) : null;
+        const targetRows = partnerRow ? [partnerRow] : rawData;
+        const allNotServiceable = targetRows.length > 0 && targetRows.every((p) => p.serviceable === false);
         if (allNotServiceable) { setNotServiceable(true); return; }
-        list = rawData.flatMap((p) => Array.isArray(p.slots) ? p.slots : []);
+        list = targetRows.flatMap((p) => Array.isArray(p.slots) ? p.slots : []);
       } else if (Array.isArray(rawData?.slots)) {
         list = rawData.slots;
       } else if (Array.isArray(data?.slots)) {
         list = data.slots;
       }
       setSlots(list);
-      if (!list.length) setError("No slots available for this date. Try another.");
+      if (!list.length) setError(`No slots available for ${cartPartner || "this location"} on this date. Try another date.`);
     }).catch((err) => setError(err.message)).finally(() => setLoadSlots(false));
   }, [date, labCart, location, profile]);
 
