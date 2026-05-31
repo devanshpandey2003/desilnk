@@ -89,8 +89,8 @@ export default function LabTestsAddressPage() {
           stateId: p.stateId != null ? String(p.stateId) : "",
           zoneId:  p.zoneId  != null ? String(p.zoneId)  : "",
         })),
-        cityId:  anyWithIds.cityId  != null ? String(anyWithIds.cityId)  : city,
-        stateId: anyWithIds.stateId != null ? String(anyWithIds.stateId) : state,
+        cityId:  anyWithIds.cityId  != null ? String(anyWithIds.cityId)  : "",
+        stateId: anyWithIds.stateId != null ? String(anyWithIds.stateId) : "",
         zoneId:  anyWithIds.zoneId  != null ? String(anyWithIds.zoneId)  : "",
       };
 

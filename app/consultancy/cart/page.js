@@ -249,10 +249,12 @@ function CheckoutView({ labCart, location, slotInfo, profile, onDone, onBack }) 
         || {};
 
       // Thyrocare does not accept cityId/stateId/zoneId — omit them entirely for thyrocare
+      // Only send numeric IDs — never send state/city names as IDs
+      const numId = (v) => (v != null && /^\d+$/.test(String(v).trim())) ? String(v).trim() : "";
       const locationIds = isThy ? {} : {
-        cityId:  partnerData.cityId  || location.cityId  || "",
-        stateId: partnerData.stateId || location.stateId || "",
-        zoneId:  partnerData.zoneId  || location.zoneId  || "",
+        cityId:  numId(partnerData.cityId  || location.cityId),
+        stateId: numId(partnerData.stateId || location.stateId),
+        zoneId:  numId(partnerData.zoneId  || location.zoneId),
       };
 
       const data = await DiagnosticService.bookLabTest({
