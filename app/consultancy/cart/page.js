@@ -143,7 +143,7 @@ function SlotView({ labCart, location, profile, onConfirm, onBack }) {
     if (!date || !labCart.length) return;
     setLoadSlots(true); setError(""); setSlots([]); setChosenSlot(null); setNotServiceable(false);
     DiagnosticService.getPhleboSlots({
-      date: toApiDate(date), lat: location.lat, long: location.long, zipcode: location.pincode,
+      date, lat: location.lat, long: location.long, zipcode: location.pincode,
       ...(location.zoneId ? { zoneId: location.zoneId } : {}),
       patients: [{ name: profile?.name || "Patient", gender: (profile?.gender || "Male").toUpperCase(), age: String(profile?.age || 25), ageType: "YEAR" }],
       testList: labCart.map((t) => ({ id: t.id || t._id || t.packageCode || t.offerId || "", type: t.productType || t.type || "PACKAGE", name: t.name || "" })),
