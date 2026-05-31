@@ -19,6 +19,8 @@ function ageFromDob(dob) {
 }
 function tomorrow() { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; }
 function maxDate()   { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split("T")[0]; }
+// MeraDoc expects DD-MM-YYYY; input[type=date] gives YYYY-MM-DD
+function toApiDate(d) { return d ? d.split("-").reverse().join("-") : d; }
 function fmtDate(str) {
   if (!str) return "";
   return new Date(str + "T00:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -141,7 +143,7 @@ function SlotView({ labCart, location, profile, onConfirm, onBack }) {
     if (!date || !labCart.length) return;
     setLoadSlots(true); setError(""); setSlots([]); setChosenSlot(null); setNotServiceable(false);
     DiagnosticService.getPhleboSlots({
-      date, lat: location.lat, long: location.long, zipcode: location.pincode,
+      date: toApiDate(date), lat: location.lat, long: location.long, zipcode: location.pincode,
       ...(location.zoneId ? { zoneId: location.zoneId } : {}),
       patients: [{ name: profile?.name || "Patient", gender: (profile?.gender || "Male").toUpperCase(), age: String(profile?.age || 25), ageType: "YEAR" }],
       testList: labCart.map((t) => ({ id: t.id || t._id || t.packageCode || t.offerId || "", type: t.productType || t.type || "PACKAGE", name: t.name || "" })),
@@ -281,7 +283,7 @@ function CheckoutView({ labCart, location, slotInfo, profile, onDone, onBack }) 
         productType:        firstTest.productType || "PACKAGE",
         packageName:        labCart.map((t) => t.name || t.packageName || ""),
         packageCode:        labCart.map((t) => t.packageCode || t.offerId || t.id || t._id || ""),
-        collectionDate:     slotInfo.collectionDate,
+        collectionDate:     toApiDate(slotInfo.collectionDate),
         collectionSlotTime: slotInfo.collectionSlotTime,
         mrp:                totalMrp,
         discountedPrice:    String(orderTotal),
