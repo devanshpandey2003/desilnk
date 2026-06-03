@@ -92,10 +92,10 @@ export default function Dashboard() {
       <aside className={`dashboard-sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div className="sidebar-logo">
           <Link href="/">
-            <Image src="/Logo.jpg" alt="Desi Link" width={120} height={30} priority />
+            <Image src="/Logo.jpg" alt="Desi Link" width={150} height={40} priority style={{ height: 40, width: "auto" }} />
           </Link>
           <div className="sidebar-logo-divider" />
-          <Image src="/sib-logo.png" alt="South Indian Bank" width={128} height={40} priority style={{ objectFit: "contain" }} />
+          <Image src="/sib-logo.png" alt="South Indian Bank" width={80} height={40} priority style={{ height: 40, width: "auto" }} />
         </div>
 
         <nav className="sidebar-nav">
