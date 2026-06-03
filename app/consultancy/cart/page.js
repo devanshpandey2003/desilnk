@@ -311,7 +311,17 @@ function CheckoutView({ labCart, location, slotInfo, profile, onDone, onBack }) 
       localStorage.setItem("ltCart", JSON.stringify([]));
       window.dispatchEvent(new Event("lt-nav-update"));
       onDone(orderId || "N/A", isPending);
-    } catch (err) { setError(err.message || "Booking failed. Please try again."); }
+    } catch (err) {
+      // Redcliffe webhook delay: booking goes through on their end but MeraDoc
+      // returns 400 for 2-3 min until the webhook confirms. Treat as processing.
+      if (err.message === "Redcliffe booking failed") {
+        localStorage.setItem("ltCart", JSON.stringify([]));
+        window.dispatchEvent(new Event("lt-nav-update"));
+        onDone("PROCESSING", true);
+      } else {
+        setError(err.message || "Booking failed. Please try again.");
+      }
+    }
     finally { setBooking(false); }
   };
 
@@ -371,25 +381,33 @@ function CheckoutView({ labCart, location, slotInfo, profile, onDone, onBack }) 
 // ── Success View ──────────────────────────────────────────────────────────────
 function SuccessView({ orderId, isPending }) {
   const router = useRouter();
+  const isProcessing = orderId === "PROCESSING";
   return (
     <div className="lt-success-wrap">
       <div className="lt-success-card animate-fade-in">
-        <div className="lt-success-icon">{isPending ? "🕐" : "✅"}</div>
-        <h2>{isPending ? "Order Placed!" : "Booking Confirmed!"}</h2>
-        {isPending ? (
+        <div className="lt-success-icon">{isProcessing ? "⏳" : isPending ? "🕐" : "✅"}</div>
+        <h2>{isProcessing ? "Booking Processing..." : isPending ? "Order Placed!" : "Booking Confirmed!"}</h2>
+        {isProcessing ? (
+          <>
+            <p>Your booking has been received and is being confirmed by the lab partner.</p>
+            <p style={{ marginTop: "0.5rem" }}>This usually takes <strong>2–3 minutes</strong>. Please check your profile shortly to see the confirmed order.</p>
+          </>
+        ) : isPending ? (
           <p>Your order is placed and <strong>payment is pending</strong>. Our team will contact you to complete the booking.</p>
         ) : (
           <p>A phlebotomist will visit you for doorstep sample collection.</p>
         )}
-        <div className="lt-order-id-box">
-          <span>Order ID</span>
-          <strong>{orderId}</strong>
-        </div>
+        {!isProcessing && (
+          <div className="lt-order-id-box">
+            <span>Order ID</span>
+            <strong>{orderId}</strong>
+          </div>
+        )}
         <p className="lt-hint" style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          Digital reports will be available within 24 hours of sample collection.
+          {isProcessing ? "You will receive a confirmation once the booking is processed." : "Digital reports will be available within 24 hours of sample collection."}
         </p>
         <button className="lt-btn-submit" onClick={() => router.push("/consultancy/profile?tab=labtests")}>
-          Track Order
+          {isProcessing ? "Check Profile" : "Track Order"}
         </button>
         <button className="lt-btn-submit" style={{ marginTop: "0.5rem", background: "#f1f5f9", color: "#1a1f36" }} onClick={() => router.push("/consultancy/lab-tests")}>
           Add More Tests
