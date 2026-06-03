@@ -554,7 +554,9 @@ function LabOrderCard({ order, patientId, onCancelSuccess, onRescheduleSuccess }
   const tests        = Array.isArray(raw.packageName) ? raw.packageName : (raw.packageName ? [raw.packageName] : []);
   const date         = raw.sampleCollectionDate || raw.collectionDate || "";
   const time         = raw.sampleCollectionTime || raw.collectionSlotTime || "";
-  const status       = (order.status || raw.orderStatus || raw.order_status || "").toUpperCase();
+  // PARTNER_BOOKING_FAILED is a transient Redcliffe webhook delay — treat as BOOKED (confirms after 1-2 min)
+  const rawStatus    = (order.status || raw.orderStatus || raw.order_status || "").toUpperCase();
+  const status       = rawStatus === "PARTNER_BOOKING_FAILED" ? "BOOKED" : rawStatus;
   const isCancelled  = status.includes("CANCEL");
   const isRescheduled = status === "RESCHEDULED";
   const isTerminal   = isCancelled || ["COMPLETED", "REPORT_GENERATED"].includes(status);
