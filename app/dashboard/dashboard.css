@@ -27,9 +27,9 @@
 }
 
 .sidebar-logo img {
-  height: 32px;
+  height: 40px;
   width: auto;
-  border-radius: 8px;
+  object-fit: contain;
 }
 
 .sidebar-logo-divider {
