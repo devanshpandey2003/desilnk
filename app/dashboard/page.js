@@ -95,7 +95,7 @@ export default function Dashboard() {
             <Image src="/Logo.jpg" alt="Desi Link" width={100} height={26} priority style={{ height: 26, width: "auto" }} />
           </Link>
           <div className="sidebar-logo-divider" />
-          <Image src="/sib-logo.png" alt="South Indian Bank" width={52} height={26} priority style={{ height: 26, width: "auto" }} />
+          <Image src="/sib-logo.png" alt="South Indian Bank" width={62} height={31} priority style={{ height: 31, width: "auto", marginBottom: 6 }} />
         </div>
 
         <nav className="sidebar-nav">
