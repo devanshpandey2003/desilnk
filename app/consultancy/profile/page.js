@@ -554,10 +554,11 @@ function LabOrderCard({ order, patientId, onCancelSuccess, onRescheduleSuccess }
   const tests        = Array.isArray(raw.packageName) ? raw.packageName : (raw.packageName ? [raw.packageName] : []);
   const date         = raw.sampleCollectionDate || raw.collectionDate || "";
   const time         = raw.sampleCollectionTime || raw.collectionSlotTime || "";
-  // PARTNER_BOOKING_FAILED is a transient Redcliffe webhook delay — treat as BOOKED (confirms after 1-2 min)
+  // PARTNER_BOOKING_FAILED is a transient Redcliffe webhook delay — treat as BOOKED
   const rawStatus    = (order.status || raw.orderStatus || raw.order_status || "").toUpperCase();
   const status       = rawStatus === "PARTNER_BOOKING_FAILED" ? "BOOKED" : rawStatus;
-  const isCancelled  = status.includes("CANCEL");
+  const isProcessing = status === "PROCESSING" || order.pending === true;
+  const isCancelled  = !isProcessing && status.includes("CANCEL");
   const isRescheduled = status === "RESCHEDULED";
   const isTerminal   = isCancelled || ["COMPLETED", "REPORT_GENERATED"].includes(status);
   const stepIndex    = isCancelled ? -1 : LAB_STEPS.findIndex((s) => s.key === status);
@@ -668,10 +669,18 @@ function LabOrderCard({ order, patientId, onCancelSuccess, onRescheduleSuccess }
 
   return (
     <div className="lab-tracker-card" style={{ marginBottom: "1rem" }}>
+      {isProcessing && (
+        <div style={{ background: "#fef9c3", border: "1px solid #fde68a", borderRadius: "8px", padding: "0.7rem 1rem", marginBottom: "0.75rem", fontSize: "0.85rem", color: "#92400e", display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "1.1rem" }}>⏳</span>
+          <div>
+            <strong>Booking is being confirmed</strong> — your order has been submitted and is awaiting confirmation from the lab partner. This usually takes 2–3 minutes.
+          </div>
+        </div>
+      )}
       <div className="lab-tracker-head">
         <div>
           <p className="apt-meta-label">Order ID</p>
-          <p className="apt-meta-value apt-id-text">{displayId}</p>
+          <p className="apt-meta-value apt-id-text">{isProcessing ? "Pending" : displayId}</p>
         </div>
         {(date || reschedSuccess) && (
           <div>
@@ -848,7 +857,18 @@ function LabTestsPanel() {
     else setRefreshing(true);
     fetch(`/api/lab-test-status?email=${encodeURIComponent(email)}`)
       .then((r) => r.json())
-      .then((json) => setOrders(json.orders || []))
+      .then((json) => {
+        const realOrders = json.orders || [];
+        // Merge pending orders from localStorage, remove any that now have real orders
+        const pendingKey = `ltPendingOrders_${email}`;
+        let pending = [];
+        try { pending = JSON.parse(localStorage.getItem(pendingKey) || "[]"); } catch {}
+        // Remove pending entries older than 15 min (webhook should have fired by then)
+        const cutoff = Date.now() - 15 * 60 * 1000;
+        pending = pending.filter((p) => p.bookedAt > cutoff);
+        localStorage.setItem(pendingKey, JSON.stringify(pending));
+        setOrders([...pending, ...realOrders]);
+      })
       .catch(() => { if (!silent) setError("Failed to load lab test orders."); })
       .finally(() => { setLoading(false); setRefreshing(false); });
   };

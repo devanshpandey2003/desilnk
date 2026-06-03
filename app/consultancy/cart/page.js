@@ -315,6 +315,30 @@ function CheckoutView({ labCart, location, slotInfo, profile, onDone, onBack }) 
       // Redcliffe webhook delay: booking goes through on their end but MeraDoc
       // returns 400 for 2-3 min until the webhook confirms. Treat as processing.
       if (err.message === "Redcliffe booking failed") {
+        // Save pending booking to localStorage so profile can show it while waiting
+        const userEmail = profile.email || localStorage.getItem("userEmail") || "";
+        const pendingKey = `ltPendingOrders_${userEmail}`;
+        const pendingId  = `pending_${Date.now()}`;
+        const pendingEntry = {
+          order_id: pendingId,
+          status:   "PROCESSING",
+          pending:  true,
+          bookedAt: Date.now(),
+          raw_data: {
+            data: {
+              packageName:          labCart.map((t) => t.name || ""),
+              packageCode:          labCart.map((t) => t.id || t.packageCode || ""),
+              sampleCollectionDate: slotInfo.collectionDate,
+              sampleCollectionTime: slotInfo.collectionSlotTime,
+              partner:              firstTest.partner || "",
+              orderStatus:          "PROCESSING",
+            }
+          }
+        };
+        try {
+          const prev = JSON.parse(localStorage.getItem(pendingKey) || "[]");
+          localStorage.setItem(pendingKey, JSON.stringify([pendingEntry, ...prev]));
+        } catch {}
         localStorage.setItem("ltCart", JSON.stringify([]));
         window.dispatchEvent(new Event("lt-nav-update"));
         onDone("PROCESSING", true);
