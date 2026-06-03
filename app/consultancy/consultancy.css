@@ -40,6 +40,13 @@
   height: 32px;
 }
 
+.nav-logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1565c0;
+  letter-spacing: -0.3px;
+}
+
 .nav-links {
   display: flex;
   align-items: center;

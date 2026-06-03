@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import "./consultancy.css";
 
@@ -41,9 +42,8 @@ export default function ConsultancyLayout({ children }) {
       <nav className="consultancy-nav">
         <div className="nav-left">
           <Link href="/consultancy" className="nav-logo">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM12 17v-4H8v-2h4V7h2v4h4v2h-4v4h-2z" />
-            </svg>
+            <Image src="/meradoc-logo.svg" alt="MeraDoc" width={36} height={36} priority style={{ borderRadius: 8, objectFit: "contain" }} />
+            <span className="nav-logo-text">MeraDoc</span>
           </Link>
           <div className="nav-links">
             {navLinks.map((l) => (
