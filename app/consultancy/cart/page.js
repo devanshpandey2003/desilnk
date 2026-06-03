@@ -429,12 +429,11 @@ export default function CartPage() {
         .then(({ user }) => { if (user) setProfile((p) => ({ ...p, name: user.name || p.name, gender: user.gender || p.gender || "", age: ageFromDob(user.dob) })); })
         .catch(() => {});
 
-      if (!cachedPid) {
-        fetch(`/api/meradoc/patient?email=${encodeURIComponent(email)}`)
-          .then((r) => r.json())
-          .then(({ patientId }) => { if (patientId) { localStorage.setItem(`meradocPatientId_${email}`, patientId); setProfile((p) => ({ ...p, patientId })); } })
-          .catch(() => {});
-      }
+      // Always fetch from DB — overrides stale localStorage values
+      fetch(`/api/meradoc/patient?email=${encodeURIComponent(email)}`)
+        .then((r) => r.json())
+        .then(({ patientId }) => { if (patientId) { localStorage.setItem(`meradocPatientId_${email}`, patientId); setProfile((p) => ({ ...p, patientId })); } })
+        .catch(() => {});
     }
   }, []);
 
