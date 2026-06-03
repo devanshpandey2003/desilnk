@@ -841,6 +841,17 @@ function LabTestsPanel() {
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState("");
   const [patientId, setPatientId] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchOrders = (email, silent = false) => {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
+    fetch(`/api/lab-test-status?email=${encodeURIComponent(email)}`)
+      .then((r) => r.json())
+      .then((json) => setOrders(json.orders || []))
+      .catch(() => { if (!silent) setError("Failed to load lab test orders."); })
+      .finally(() => { setLoading(false); setRefreshing(false); });
+  };
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail") || "";
@@ -860,12 +871,7 @@ function LabTestsPanel() {
         .catch(() => {});
     }
 
-    // Fetch live order status from MeraDoc on every load
-    fetch(`/api/lab-test-status?email=${encodeURIComponent(email)}`)
-      .then((r) => r.json())
-      .then((json) => setOrders(json.orders || []))
-      .catch(() => setError("Failed to load lab test orders."))
-      .finally(() => setLoading(false));
+    fetchOrders(email);
   }, []);
 
   const handleCancelSuccess = (orderId) => {
@@ -891,6 +897,8 @@ function LabTestsPanel() {
 
   if (error) return <p className="lab-error">{error}</p>;
 
+  const email = localStorage.getItem("userEmail") || "";
+
   if (orders.length === 0) {
     return (
       <div className="apt-panel-empty">
@@ -901,12 +909,28 @@ function LabTestsPanel() {
         </div>
         <h3>No Lab Tests</h3>
         <p>Your booked lab tests will appear here automatically.</p>
+        <button
+          onClick={() => fetchOrders(email, true)}
+          disabled={refreshing}
+          style={{ marginTop: "1rem", padding: "0.5rem 1.2rem", borderRadius: "8px", border: "1px solid #1a4fd4", background: "#fff", color: "#1a4fd4", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem" }}
+        >
+          {refreshing ? "Checking..." : "🔄 Check for new orders"}
+        </button>
       </div>
     );
   }
 
   return (
     <div className="lab-panel">
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.5rem" }}>
+        <button
+          onClick={() => fetchOrders(email, true)}
+          disabled={refreshing}
+          style={{ padding: "0.35rem 0.9rem", borderRadius: "8px", border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "4px" }}
+        >
+          {refreshing ? "Refreshing..." : "🔄 Refresh"}
+        </button>
+      </div>
       {orders.map((order) => (
         <LabOrderCard
           key={order.order_id}
