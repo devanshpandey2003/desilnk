@@ -255,13 +255,14 @@ function CheckoutView({ labCart, location, slotInfo, profile, onDone, onBack }) 
         || (location.partners || [])[0]
         || {};
 
-      // Thyrocare does not accept cityId/stateId/zoneId — omit them entirely for thyrocare
       // Only send numeric IDs — never send state/city names as IDs
+      // Only use the partner-specific value; never fall back to another partner's cityId/stateId
+      // (e.g. redcliffe has no cityId/stateId — sending healthians values causes 400)
       const numId = (v) => (v != null && /^\d+$/.test(String(v).trim())) ? String(v).trim() : "";
       const locationIds = isThy ? {} : {
-        cityId:  numId(partnerData.cityId  || location.cityId),
-        stateId: numId(partnerData.stateId || location.stateId),
-        zoneId:  numId(partnerData.zoneId  || location.zoneId),
+        ...(numId(partnerData.cityId)  ? { cityId:  numId(partnerData.cityId)  } : {}),
+        ...(numId(partnerData.stateId) ? { stateId: numId(partnerData.stateId) } : {}),
+        ...(numId(partnerData.zoneId || location.zoneId) ? { zoneId: numId(partnerData.zoneId || location.zoneId) } : {}),
       };
 
       const data = await DiagnosticService.bookLabTest({
