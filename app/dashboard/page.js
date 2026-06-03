@@ -94,6 +94,8 @@ export default function Dashboard() {
           <Link href="/">
             <Image src="/Logo.jpg" alt="Desi Link" width={120} height={30} priority />
           </Link>
+          <div className="sidebar-logo-divider" />
+          <Image src="/sib-logo.png" alt="South Indian Bank" width={80} height={30} priority style={{ objectFit: "contain" }} />
         </div>
 
         <nav className="sidebar-nav">

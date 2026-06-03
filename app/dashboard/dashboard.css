@@ -23,12 +23,20 @@
   padding: 0 24px 32px;
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .sidebar-logo img {
   height: 32px;
   width: auto;
   border-radius: 8px;
+}
+
+.sidebar-logo-divider {
+  width: 1px;
+  height: 28px;
+  background: #e5e7eb;
+  flex-shrink: 0;
 }
 
 .sidebar-nav {
