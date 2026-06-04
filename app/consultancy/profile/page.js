@@ -583,7 +583,16 @@ function LabOrderCard({ order, patientId, onCancelSuccess, onRescheduleSuccess }
   useEffect(() => {
     if (!reschedDate || !showReschedule) return;
     setLoadingSlots(true); setSlots([]); setChosenSlot(null); setReschedError("");
-    const loc  = (() => { try { return JSON.parse(localStorage.getItem("ltLocation") || "null") || {}; } catch { return {}; } })();
+    // Use location from the order's own raw_data first (has lat/long/pincode/zoneId from booking)
+    // Fall back to per-email localStorage — never use the shared ltLocation key
+    const email = localStorage.getItem("userEmail") || "";
+    const locFallback = (() => { try { return JSON.parse(localStorage.getItem(`ltLocation_${email}`) || "null") || {}; } catch { return {}; } })();
+    const loc = {
+      lat:     raw.lat     || locFallback.lat     || "0",
+      long:    raw.long    || locFallback.long    || "0",
+      pincode: raw.sampleCollectionAddress_PinCode || raw.pincode || locFallback.pincode || "",
+      zoneId:  raw.zoneId  || locFallback.zoneId  || "",
+    };
     const codes = Array.isArray(raw.packageCode) ? raw.packageCode : (raw.packageCode ? [raw.packageCode] : []);
     const names = Array.isArray(raw.packageName) ? raw.packageName : (raw.packageName ? [raw.packageName] : []);
     const ptype = raw.productType || "PACKAGE";
@@ -592,9 +601,9 @@ function LabOrderCard({ order, patientId, onCancelSuccess, onRescheduleSuccess }
     import("../../../services/diagnostic.service").then(({ DiagnosticService }) =>
       DiagnosticService.getPhleboSlots({
         date: reschedDate,
-        lat:     loc.lat  || "0",
-        long:    loc.long || loc.lon || "0",
-        zipcode: loc.pincode || "",
+        lat:     loc.lat,
+        long:    loc.long,
+        zipcode: loc.pincode,
         ...(loc.zoneId ? { zoneId: loc.zoneId } : {}),
         patients: [{ name: raw.patientName || localStorage.getItem("userName") || "Patient", gender: (raw.gender || "Male").toUpperCase(), age: String(raw.age || 25), ageType: "YEAR" }],
         testList,
