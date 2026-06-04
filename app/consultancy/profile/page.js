@@ -588,10 +588,10 @@ function LabOrderCard({ order, patientId, onCancelSuccess, onRescheduleSuccess }
     const email = localStorage.getItem("userEmail") || "";
     const locFallback = (() => { try { return JSON.parse(localStorage.getItem(`ltLocation_${email}`) || "null") || {}; } catch { return {}; } })();
     const loc = {
-      lat:     raw.lat     || locFallback.lat     || "0",
-      long:    raw.long    || locFallback.long    || "0",
-      pincode: raw.sampleCollectionAddress_PinCode || raw.pincode || locFallback.pincode || "",
-      zoneId:  raw.zoneId  || locFallback.zoneId  || "",
+      lat:     String(raw.lat     || locFallback.lat     || "0"),
+      long:    String(raw.long    || locFallback.long    || "0"),
+      pincode: String(raw.sampleCollectionAddress_PinCode || raw.pincode || locFallback.pincode || ""),
+      zoneId:  String(raw.zoneId  || locFallback.zoneId  || ""),
     };
     const codes = Array.isArray(raw.packageCode) ? raw.packageCode : (raw.packageCode ? [raw.packageCode] : []);
     const names = Array.isArray(raw.packageName) ? raw.packageName : (raw.packageName ? [raw.packageName] : []);

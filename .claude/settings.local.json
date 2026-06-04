@@ -10,7 +10,19 @@
       "Bash(curl -s -X POST https://apidev.meradoc.com/user/api/v1/sso/tenant -H 'Content-Type: application/json' -H 'x-api-id: PVMD-01' -H 'x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu' -d '{\"originToken\":\"ea905fcbecccb788fdde2651cf4ff7d1\"}')",
       "Bash(python -c ' *)",
       "Bash(node -e ' *)",
-      "Bash(DATABASE_URL='postgresql://neondb_owner:npg_pc6bYfxNUH9t@ep-misty-star-adp5cj6e.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require' node -e ' *)"
+      "Bash(DATABASE_URL='postgresql://neondb_owner:npg_pc6bYfxNUH9t@ep-misty-star-adp5cj6e.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require' node -e ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git -C \"c:/dev/internship/desilink\" status)",
+      "Bash(git -C \"c:/dev/internship/desilink\" diff app/consultancy/cart/page.js app/consultancy/profile/page.js)",
+      "Bash(git -C \"c:/dev/internship/desilink\" add app/consultancy/cart/page.js)",
+      "Bash(git -C c:/dev/internship/desilink commit -m ' *)",
+      "Bash(git -C \"c:/dev/internship/desilink\" push origin master)",
+      "Bash(curl -s -X POST https://apidev.meradoc.com/user/api/v1/sso/tenant -H 'x-api-id: PVMD-01' -H 'x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu' -H 'originToken: ea905fcbecccb788fdde2651cf4ff7d1' -H 'Content-Type: application/json' -d '{}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('data',{}\\).get\\('token','NO TOKEN'\\)\\)\")",
+      "Bash(curl -s -X POST https://apidev.meradoc.com/pharmacy/api/v1/diagnostic/tenant/getPhleboSlots -H 'x-api-id: PVMD-01' -H 'x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu' -H 'originToken: ea905fcbecccb788fdde2651cf4ff7d1' -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MDIwOGEzYmY0ZTFjMTQzNjdlNzNkYyIsImNsaWVudElkIjoiUFZNRC0wMSIsInJlZmVycmFsQ29kZSI6IlByYXZhc2kiLCJ0eXBlIjoiVEVOQU5UIiwiU1NPX0xPR0lOIjpmYWxzZSwic2Vzc2lvbklkIjoiNmExYzI2NDBhZjdjYjkwMDEyNDFkYTQyIiwidmlkZW9DYWxsUm9vbVRlbXBsYXRlSWQiOiIiLCJkb2N0b3JWaXNpYmlsaXR5IjoiYm90aCIsImlhdCI6MTc4MDIyOTY5NiwiZXhwIjoxNzgwMjMzMjk2fQ.UAiAYWG91BrkCzWD9sZARxQnJmyI8IHimIcRCxYrhio' -d '{ *)",
+      "Bash(curl -s 'https://apidev.meradoc.com/pharmacy/api/v1/diagnostic/tenant/checkServiceability?zipcode=440001&lat=21.1540859&long=79.0768393' -H 'x-api-id: PVMD-01' -H 'x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu' -H 'originToken: ea905fcbecccb788fdde2651cf4ff7d1' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MDIwOGEzYmY0ZTFjMTQzNjdlNzNkYyIsImNsaWVudElkIjoiUFZNRC0wMSIsInJlZmVycmFsQ29kZSI6IlByYXZhc2kiLCJ0eXBlIjoiVEVOQU5UIiwiU1NPX0xPR0lOIjpmYWxzZSwic2Vzc2lvbklkIjoiNmExYzI2NDBhZjdjYjkwMDEyNDFkYTQyIiwidmlkZW9DYWxsUm9vbVRlbXBsYXRlSWQiOiIiLCJkb2N0b3JWaXNpYmlsaXR5IjoiYm90aCIsImlhdCI6MTc4MDIyOTY5NiwiZXhwIjoxNzgwMjMzMjk2fQ.UAiAYWG91BrkCzWD9sZARxQnJmyI8IHimIcRCxYrhio')"
     ]
   }
 }
