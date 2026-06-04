@@ -43,18 +43,17 @@ export default function MeraDocRegisterPage() {
 
     if (!savedEmail) return;
 
-    // 1. Check localStorage cache first — fastest path
-    const cachedPid = localStorage.getItem(`meradocPatientId_${savedEmail}`);
-    if (cachedPid) { router.replace("/consultancy"); return; }
-
-    // 2. Check DB
+    // Always check DB first — DB is source of truth.
+    // localStorage may have stale/wrong patientIds from previous issues.
     fetch(`/api/meradoc/patient?email=${encodeURIComponent(savedEmail)}`)
       .then((r) => r.json())
       .then((json) => {
         if (json.patientId) {
+          // Sync correct value into localStorage and redirect
           localStorage.setItem(`meradocPatientId_${savedEmail}`, json.patientId);
           router.replace("/consultancy");
         }
+        // If DB has nothing, show the registration form (even if localStorage has something stale)
       })
       .catch(() => {});
   }, [router]);
