@@ -46,6 +46,10 @@ export default function CreateAccountPage() {
   const [search, setSearch] = useState("");
   const searchRef = useRef(null);
 
+  /* shared password field (signin + register) */
+  const [password, setPassword] = useState("");
+  const [showPass,  setShowPass]  = useState(false);
+
   /* async state */
   const [checking, setChecking] = useState(false);
   const [signinError, setSigninError] = useState("");
@@ -91,7 +95,7 @@ export default function CreateAccountPage() {
   };
 
   /* ── Register ── */
-  const isRegisterValid = email.trim() !== "" && VALID_EMAIL.test(email.trim()) && phone.trim() !== "";
+  const isRegisterValid = email.trim() !== "" && VALID_EMAIL.test(email.trim()) && phone.trim() !== "" && password === "123456";
 
   const handleRegister = async () => {
     const trimmedEmail = email.trim();
@@ -126,6 +130,7 @@ export default function CreateAccountPage() {
     setMode(m);
     setEmail("");
     setPhone("");
+    setPassword("");
     setSigninError("");
   };
 
