@@ -6,11 +6,19 @@ import { DiagnosticService } from "../../../../services/diagnostic.service";
 import { UserService } from "../../../../services/user.service";
 import "../lab-tests.css";
 
-function saveLocation(loc) {
-  localStorage.setItem("ltLocation",     JSON.stringify(loc));
-  localStorage.setItem("ltDeliveryCity", loc.city || "");
+async function saveLocation(loc) {
   const email = localStorage.getItem("userEmail") || "";
-  if (email) localStorage.setItem(`ltLocation_${email}`, JSON.stringify(loc));
+  // Always save per-email, never to the shared key
+  if (email) {
+    localStorage.setItem(`ltLocation_${email}`, JSON.stringify(loc));
+    localStorage.setItem("ltDeliveryCity", loc.city || "");
+    // Persist to DB so other devices/browsers get the right address
+    fetch("/api/lab-test-address", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, location: loc }),
+    }).catch(() => {});
+  }
   window.dispatchEvent(new Event("lt-nav-update"));
 }
 

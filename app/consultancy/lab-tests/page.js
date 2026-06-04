@@ -637,30 +637,15 @@ export default function LabTestsPage() {
   const [checking, setChecking] = useState(true); // verifying serviceability on entry
   const [profile,  setProfile]  = useState(null);
 
-  // On mount: load saved address, re-verify serviceability, then show main view
+  // On mount: load saved address from DB (per-email), then re-verify serviceability
   useEffect(() => {
-    const getSaved = () => {
-      try {
-        const loc = JSON.parse(localStorage.getItem("ltLocation") || "null");
-        if (loc) return loc;
-        const email = localStorage.getItem("userEmail") || "";
-        if (email) {
-          const backup = JSON.parse(localStorage.getItem(`ltLocation_${email}`) || "null");
-          if (backup) {
-            localStorage.setItem("ltLocation",     JSON.stringify(backup));
-            localStorage.setItem("ltDeliveryCity", backup.city || "");
-            return backup;
-          }
-        }
-        return null;
-      } catch { return null; }
-    };
+    const email = localStorage.getItem("userEmail") || "";
 
-    const saved = getSaved();
-    if (!saved) { router.replace("/consultancy/lab-tests/address"); return; }
+    const init = async (saved) => {
+      if (!saved) { router.replace("/consultancy/lab-tests/address"); return; }
 
-    // Re-verify serviceability so partners/IDs are always fresh
-    DiagnosticService.checkServiceability({ zipcode: saved.pincode, lat: saved.lat, long: saved.long })
+      // Re-verify serviceability so partners/IDs are always fresh
+      DiagnosticService.checkServiceability({ zipcode: saved.pincode, lat: saved.lat, long: saved.long })
       .then((data) => {
         const partners    = Array.isArray(data?.data) ? data.data : (data?.data ? [data.data] : []);
         const serviceable = partners.length > 0
@@ -687,19 +672,34 @@ export default function LabTestsPage() {
           zoneId:  anyWithIds.zoneId  != null ? String(anyWithIds.zoneId)  : "",
         };
 
-        localStorage.setItem("ltLocation",     JSON.stringify(updated));
-        localStorage.setItem("ltDeliveryCity", updated.city || "");
-        const email = localStorage.getItem("userEmail") || "";
-        if (email) localStorage.setItem(`ltLocation_${email}`, JSON.stringify(updated));
+        // Save refreshed address back to DB + per-email localStorage
+        if (email) {
+          localStorage.setItem(`ltLocation_${email}`, JSON.stringify(updated));
+          localStorage.setItem("ltDeliveryCity", updated.city || "");
+          fetch("/api/lab-test-address", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, location: updated }),
+          }).catch(() => {});
+        }
         window.dispatchEvent(new Event("lt-nav-update"));
-
         setLocation(updated);
         setChecking(false);
       })
+      .catch(() => { setLocation(saved); setChecking(false); });
+    };
+
+    // Load from DB first, fallback to per-email localStorage
+    fetch(`/api/lab-test-address?email=${encodeURIComponent(email)}`)
+      .then((r) => r.json())
+      .then(({ location }) => {
+        const saved = location || (() => {
+          try { return JSON.parse(localStorage.getItem(`ltLocation_${email}`) || "null"); } catch { return null; }
+        })();
+        init(saved);
+      })
       .catch(() => {
-        // On network error fall back to cached data rather than blocking the user
-        setLocation(saved);
-        setChecking(false);
+        try { init(JSON.parse(localStorage.getItem(`ltLocation_${email}`) || "null")); } catch { init(null); }
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

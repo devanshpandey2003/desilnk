@@ -453,9 +453,8 @@ export default function CartPage() {
   const [isPending,setIsPending]= useState(false);
 
   useEffect(() => {
-    // Load cart + location from localStorage
+    // Load cart from localStorage
     try { const c = JSON.parse(localStorage.getItem("ltCart") || "[]"); setLabCart(c); } catch {}
-    try { setLocation(JSON.parse(localStorage.getItem("ltLocation") || "null")); } catch {}
 
     // Load profile
     const email     = localStorage.getItem("userEmail")   || "";
@@ -476,6 +475,22 @@ export default function CartPage() {
         .then((r) => r.json())
         .then(({ patientId }) => { if (patientId) { localStorage.setItem(`meradocPatientId_${email}`, patientId); setProfile((p) => ({ ...p, patientId })); } })
         .catch(() => {});
+
+      // Load address from DB (per-email), fallback to per-email localStorage
+      fetch(`/api/lab-test-address?email=${encodeURIComponent(email)}`)
+        .then((r) => r.json())
+        .then(({ location }) => {
+          if (location) {
+            localStorage.setItem(`ltLocation_${email}`, JSON.stringify(location));
+            setLocation(location);
+          } else {
+            // fallback: per-email localStorage key only
+            try { const loc = JSON.parse(localStorage.getItem(`ltLocation_${email}`) || "null"); if (loc) setLocation(loc); } catch {}
+          }
+        })
+        .catch(() => {
+          try { const loc = JSON.parse(localStorage.getItem(`ltLocation_${email}`) || "null"); if (loc) setLocation(loc); } catch {}
+        });
     }
   }, []);
 
