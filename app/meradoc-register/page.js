@@ -41,19 +41,22 @@ export default function MeraDocRegisterPage() {
     setName(savedName);
     setPhone(savedPhone.replace(/^\+\d+\s?/, ""));
 
-    // Auto-redirect if already registered in MeraDoc
-    if (savedEmail) {
-      fetch(`/api/meradoc/patient?email=${encodeURIComponent(savedEmail)}`)
-        .then((r) => r.json())
-        .then((json) => {
-          if (json.patientId) {
-            const key = `meradocPatientId_${savedEmail}`;
-            localStorage.setItem(key, json.patientId);
-            router.replace("/consultancy");
-          }
-        })
-        .catch(() => {});
-    }
+    if (!savedEmail) return;
+
+    // 1. Check localStorage cache first — fastest path
+    const cachedPid = localStorage.getItem(`meradocPatientId_${savedEmail}`);
+    if (cachedPid) { router.replace("/consultancy"); return; }
+
+    // 2. Check DB
+    fetch(`/api/meradoc/patient?email=${encodeURIComponent(savedEmail)}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.patientId) {
+          localStorage.setItem(`meradocPatientId_${savedEmail}`, json.patientId);
+          router.replace("/consultancy");
+        }
+      })
+      .catch(() => {});
   }, [router]);
 
   const isValid =
@@ -129,12 +132,16 @@ export default function MeraDocRegisterPage() {
       const errData = err?.response?.data;
       console.error("MeraDoc registration failed:", errData || err.message);
 
-      // MeraDoc may return the existing patient inside the error body if email
-      // already exists on their side but our DB is missing the link.
-      const existingId = errData?.data?._id || errData?._id || errData?.patientId;
+      const emailVal   = email.trim();
+      const patientKey = emailVal ? `meradocPatientId_${emailVal}` : null;
+
+      // MeraDoc returns existing patient in error body when email already exists
+      const existingId =
+        errData?.data?._id   || errData?.data?.id   ||
+        errData?._id         || errData?.id          ||
+        errData?.patientId   || errData?.data?.patientId;
+
       if (existingId) {
-        const emailVal  = email.trim();
-        const patientKey = emailVal ? `meradocPatientId_${emailVal}` : null;
         await fetch("/api/meradoc/patient", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -142,6 +149,23 @@ export default function MeraDocRegisterPage() {
         });
         if (patientKey) localStorage.setItem(patientKey, existingId);
         router.push("/consultancy");
+        return;
+      }
+
+      // If error says email already exists but no ID returned, check DB one more time
+      // (another tab/device may have registered successfully)
+      const errMsg = (errData?.message || errData?.error || err.message || "").toLowerCase();
+      if (errMsg.includes("already") || errMsg.includes("exist") || errMsg.includes("duplicate")) {
+        try {
+          const recheck = await fetch(`/api/meradoc/patient?email=${encodeURIComponent(emailVal)}`);
+          const { patientId: recheckPid } = await recheck.json();
+          if (recheckPid) {
+            if (patientKey) localStorage.setItem(patientKey, recheckPid);
+            router.push("/consultancy");
+            return;
+          }
+        } catch {}
+        setError("Your account already exists in MeraDoc but we couldn't link it automatically. Please contact support.");
         return;
       }
 
