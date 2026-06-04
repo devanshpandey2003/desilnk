@@ -45,33 +45,65 @@
   font-weight: 500;
 }
 
-/* OTP code boxes */
-.otp-row {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin: 40px 0 24px;
+/* Password field */
+.password-field {
+  position: relative;
+  width: 100%;
+  margin: 32px 0 20px;
 }
 
-.otp-box {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+.password-input {
+  width: 100%;
+  padding: 14px 48px 14px 16px;
   border: 1px solid #d1d5db;
-  text-align: center;
-  font-size: 22px;
-  font-weight: 600;
+  border-radius: 16px;
+  font-size: 16px;
   font-family: inherit;
   color: #111;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
-  caret-color: #8b5cf6;
+  box-sizing: border-box;
 }
 
-.otp-box:focus {
+.password-input::placeholder {
+  color: #c0c4cc;
+}
+
+.password-input:focus {
   border-color: #8b5cf6;
-  border-width: 2px;
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.password-toggle:hover {
+  color: #6b7280;
+}
+
+.verify-error {
+  font-size: 13px;
+  color: #dc2626;
+  margin: -12px 0 12px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  line-height: 1.5;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
 }
 
 /* Verify button */
@@ -103,32 +135,5 @@
   box-shadow: none;
 }
 
-/* Resend section */
-.resend-section {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.resend-timer {
-  font-size: 14px;
-  color: #9ca3af;
-}
-
-.resend-alt {
-  font-size: 14px;
-  color: #9ca3af;
-  margin-top: 4px;
-}
-
-.resend-alt a {
-  color: #8b5cf6;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.resend-alt a:hover {
-  text-decoration: underline;
-}
 
 /* divider + back — reuse from login.css */

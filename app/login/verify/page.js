@@ -1,132 +1,100 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Suspense } from "react";
-import "../login.css";   /* shared progress bar + back/divider styles */
+import "../login.css";
 import "./verify.css";
 
-/* ── Inner component that uses useSearchParams ── */
+const HARDCODED_PASSWORD = "123456";
+
 function VerifyNumberInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const phoneNumber = searchParams.get("phone") || "+1 xxxxxxxxxx";
 
   const currentStep = 3;
-  const totalSteps = 7;
+  const totalSteps  = 7;
 
-  /* 6-digit OTP state */
-  const [digits, setDigits] = useState(["", "", "", "", "", ""]);
-  const inputRefs = useRef([]);
-
-  /* resend countdown */
-  const [timer, setTimer] = useState(27);
-  useEffect(() => {
-    if (timer <= 0) return;
-    const id = setTimeout(() => setTimer((t) => t - 1), 1000);
-    return () => clearTimeout(id);
-  }, [timer]);
-
-  /* focus first box on mount */
-  useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
-
-  const handleChange = (value, idx) => {
-    if (!/^\d?$/.test(value)) return;           // digits only
-    const next = [...digits];
-    next[idx] = value;
-    setDigits(next);
-
-    if (value && idx < 5) inputRefs.current[idx + 1]?.focus();
-  };
-
-  const handleKey = (e, idx) => {
-    if (e.key === "Backspace" && !digits[idx] && idx > 0) {
-      inputRefs.current[idx - 1]?.focus();
-    }
-  };
-
-  const isComplete = digits.every((d) => d !== "");
+  const [password, setPassword]   = useState("");
+  const [showPass,  setShowPass]  = useState(false);
+  const [error,     setError]     = useState("");
+  const inputRef = useRef(null);
 
   const handleVerify = () => {
-    const code = digits.join("");
-    console.log(`Verification code: ${code}\nPhone: ${phoneNumber}`);
+    if (password !== HARDCODED_PASSWORD) {
+      setError("Incorrect password. Please try again.");
+      setPassword("");
+      inputRef.current?.focus();
+      return;
+    }
     router.push("/login/about");
   };
 
   return (
     <div className="verify-page">
       <div className="verify-inner">
-        {/* ── Progress bar (reuses login.css classes) ── */}
+        {/* Progress bar */}
         <div className="progress-bar-track">
-          <div className="progress-bar-done" style={{ flex: currentStep - 1 }} />
+          <div className="progress-bar-done"      style={{ flex: currentStep - 1 }} />
           <div className="progress-bar-remaining" style={{ flex: totalSteps - (currentStep - 1) }} />
         </div>
-
         <p className="step-label">Step {currentStep} of {totalSteps}</p>
         <div className="divider" />
 
-        {/* ── Centered content ── */}
         <div className="verify-form-area">
-          <h1>Verify your number</h1>
+          <h1>Enter Password</h1>
+          <p className="verify-subtitle">Enter your password to continue</p>
 
-          <p className="verify-subtitle">
-            We&apos;ve sent a code to{" "}
-            <span className="phone-highlight">{phoneNumber}</span> using
-            <br />
-            WhatsApp
-          </p>
-
-          {/* OTP boxes */}
-          <div className="otp-row">
-            {digits.map((d, i) => (
-              <input
-                key={i}
-                ref={(el) => (inputRefs.current[i] = el)}
-                className="otp-box"
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={d}
-                onChange={(e) => handleChange(e.target.value, i)}
-                onKeyDown={(e) => handleKey(e, i)}
-              />
-            ))}
+          {/* Password input */}
+          <div className="password-field">
+            <input
+              ref={inputRef}
+              className="password-input"
+              type={showPass ? "text" : "password"}
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              onKeyDown={(e) => e.key === "Enter" && handleVerify()}
+              autoFocus
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPass((v) => !v)}
+              aria-label="Toggle password visibility"
+            >
+              {showPass ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              )}
+            </button>
           </div>
 
-          {/* Verify button */}
+          {error && <p className="verify-error">{error}</p>}
+
           <button
             className="btn-verify"
-            disabled={!isComplete}
+            disabled={!password}
             onClick={handleVerify}
           >
-            Verify
+            Continue
           </button>
-
-          {/* Resend */}
-          <div className="resend-section">
-            <p className="resend-timer">
-              Request new code in 0:{String(timer).padStart(2, "0")}
-            </p>
-            <p className="resend-alt">
-              Don&apos;t have WhatsApp?{" "}
-              <a onClick={() => alert("SMS code sent!")}>Send SMS</a>
-            </p>
-          </div>
 
           <div className="bottom-divider" />
-
-          <button className="btn-back" onClick={() => router.back()}>
-            Back
-          </button>
+          <button className="btn-back" onClick={() => router.back()}>Back</button>
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Suspense wrapper (required for useSearchParams) ── */
 export default function VerifyNumberPage() {
   return (
     <Suspense fallback={<div className="verify-page"><div className="verify-inner" /></div>}>
