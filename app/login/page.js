@@ -95,7 +95,7 @@ export default function CreateAccountPage() {
   };
 
   /* ── Register ── */
-  const isRegisterValid = email.trim() !== "" && VALID_EMAIL.test(email.trim()) && phone.trim() !== "" && password === "123456";
+  const isRegisterValid = email.trim() !== "" && VALID_EMAIL.test(email.trim()) && phone.trim() !== "";
 
   const handleRegister = async () => {
     const trimmedEmail = email.trim();

@@ -41,8 +41,8 @@ function VerifyNumberInner() {
         <div className="divider" />
 
         <div className="verify-form-area">
-          <h1>Enter Password</h1>
-          <p className="verify-subtitle">Enter your password to continue</p>
+          <h1>Create a Password</h1>
+          <p className="verify-subtitle">Set a password to secure your account</p>
 
           {/* Password input */}
           <div className="password-field">
@@ -50,7 +50,7 @@ function VerifyNumberInner() {
               ref={inputRef}
               className="password-input"
               type={showPass ? "text" : "password"}
-              placeholder="Enter password"
+              placeholder="Create your password"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && handleVerify()}
