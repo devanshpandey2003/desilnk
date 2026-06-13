@@ -21,6 +21,32 @@ export const UserService = {
     return response.data;
   },
 
+  addMeraDocAddress: async (patientId, location) => {
+    const response = await api.post("/user/api/v1/user/address/create", {
+      name:         location.name         || "Patient",
+      mobileNumber: location.mobileNumber || "",
+      lat:          String(location.lat   || "0"),
+      long:         String(location.long  || "0"),
+      addressLine1: location.addressLine1 || "",
+      addressLine2: location.addressLine2 || "",
+      district:     location.district     || location.city || "",
+      pincode:      String(location.pincode || ""),
+      city:         location.city         || "",
+      state:        location.state        || "",
+      country:      location.country      || "India",
+      addressType:  "HOME",
+      userId:       patientId,
+    });
+    return response.data;
+  },
+
+  getMeraDocAddresses: async (patientId) => {
+    const response = await api.get("/user/api/v1/user/address/list", {
+      data: { userId: patientId },
+    });
+    return response.data;
+  },
+
   addFamilyMember: async (patientId, members) => {
     const response = await api.post(`/user/api/v1/user/addFamilyMember/${patientId}`, members);
     return response.data;

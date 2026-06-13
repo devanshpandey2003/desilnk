@@ -8,16 +8,32 @@ import "../lab-tests.css";
 
 async function saveLocation(loc) {
   const email = localStorage.getItem("userEmail") || "";
-  // Always save per-email, never to the shared key
   if (email) {
     localStorage.setItem(`ltLocation_${email}`, JSON.stringify(loc));
     localStorage.setItem("ltDeliveryCity", loc.city || "");
-    // Persist to DB so other devices/browsers get the right address
-    fetch("/api/lab-test-address", {
+
+    // Persist to our DB
+    await fetch("/api/lab-test-address", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, location: loc }),
     }).catch(() => {});
+
+    // Also create/update in MeraDoc so we have an addressId for medicine orders
+    const patientId = localStorage.getItem(`meradocPatientId_${email}`) || "";
+    if (patientId) {
+      const userName   = localStorage.getItem("userName")  || "Patient";
+      const userPhone  = localStorage.getItem("userPhone") || "";
+      fetch("/api/meradoc/address", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          patientId,
+          location: { ...loc, name: userName, mobileNumber: userPhone.replace(/^\+\d+\s?/, "") },
+        }),
+      }).catch(() => {});
+    }
   }
   window.dispatchEvent(new Event("lt-nav-update"));
 }
