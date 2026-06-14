@@ -107,21 +107,40 @@ export default function MedicinesPage() {
         </div>
       </div>
 
-      {/* Feature cards */}
+      {/* Action cards */}
       {!searched && (
         <div className="med-features">
-          {[
-            { icon: "🛡️", color: "#dcfce7", label: "100% Authentic", sub: "All medicines sourced from verified suppliers" },
-            { icon: "🚚", color: "#dbeafe", label: "Express Delivery", sub: "Timely delivered to your doorstep" },
-            { icon: "💰", color: "#ede9fe", label: "Great Discounts", sub: "Save on recurring medicine bill" },
-            { icon: "🔒", color: "#ffedd5", label: "Secure Payments", sub: "Safe and encrypted transactions" },
-          ].map(f => (
-            <div key={f.label} className="med-feature-card">
-              <div className="med-feature-icon" style={{ background: f.color }}>{f.icon}</div>
-              <h4>{f.label}</h4>
-              <p>{f.sub}</p>
+          <button className="med-feature-card med-feature-btn" onClick={() => router.push("/consultancy/medicines/prescription")}>
+            <div className="med-feature-icon" style={{ background: "#dbeafe" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a4fd4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </div>
-          ))}
+            <h4>Upload</h4>
+            <p>Prescription</p>
+          </button>
+
+          <a className="med-feature-card med-feature-btn" href="tel:+918069991444">
+            <div className="med-feature-icon" style={{ background: "#ffedd5" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.35 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <h4>Call to</h4>
+            <p>Order</p>
+          </a>
+
+          <button className="med-feature-card med-feature-btn" onClick={() => router.push("/consultancy/concerns")}>
+            <div className="med-feature-icon" style={{ background: "#dcfce7" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <h4>Consult</h4>
+            <p>Doctor</p>
+          </button>
+
+          <div className="med-feature-card">
+            <div className="med-feature-icon" style={{ background: "#ede9fe" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <h4>10 mins</h4>
+            <p>Delivery</p>
+          </div>
         </div>
       )}
 
