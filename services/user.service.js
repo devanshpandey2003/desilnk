@@ -22,18 +22,19 @@ export const UserService = {
   },
 
   addMeraDocAddress: async (patientId, location) => {
+    const s = (v, fallback = "") => (v == null ? fallback : String(v));
     const response = await api.post("/user/api/v1/user/address/create", {
-      name:         location.name         || "Patient",
-      mobileNumber: location.mobileNumber || "",
-      lat:          String(location.lat   || "0"),
-      long:         String(location.long  || "0"),
-      addressLine1: location.addressLine1 || "",
-      addressLine2: location.addressLine2 || "",
-      district:     location.district     || location.city || "",
-      pincode:      String(location.pincode || ""),
-      city:         location.city         || "",
-      state:        location.state        || "",
-      country:      location.country      || "India",
+      name:         s(location.name,         "Patient"),
+      mobileNumber: s(location.mobileNumber, ""),
+      lat:          s(location.lat,          "0"),
+      long:         s(location.long,         "0"),
+      addressLine1: s(location.addressLine1, ""),
+      addressLine2: s(location.addressLine2, ""),
+      district:     s(location.district || location.city, ""),
+      pincode:      s(location.pincode,      ""),
+      city:         s(location.city,         ""),
+      state:        s(location.state,        ""),
+      country:      s(location.country,      "India"),
       addressType:  "HOME",
       userId:       patientId,
     });

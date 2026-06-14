@@ -47,18 +47,20 @@ export async function POST(request) {
     const token = await getAccessToken();
     if (!token) return NextResponse.json({ error: "Failed to get MeraDoc token" }, { status: 500 });
 
+    const s = (v, fallback = "") => (v == null ? fallback : String(v));
+
     const body = {
-      name:         location.name         || "Patient",
-      mobileNumber: location.mobileNumber || "",
-      lat:          String(location.lat   || "0"),
-      long:         String(location.long  || "0"),
-      addressLine1: location.addressLine1 || "",
-      addressLine2: location.addressLine2 || "",
-      district:     location.district     || location.city || "",
-      pincode:      String(location.pincode || ""),
-      city:         location.city         || "",
-      state:        location.state        || "",
-      country:      location.country      || "India",
+      name:         s(location.name,         "Patient"),
+      mobileNumber: s(location.mobileNumber, ""),
+      lat:          s(location.lat,          "0"),
+      long:         s(location.long,         "0"),
+      addressLine1: s(location.addressLine1, ""),
+      addressLine2: s(location.addressLine2, ""),
+      district:     s(location.district || location.city, ""),
+      pincode:      s(location.pincode,      ""),
+      city:         s(location.city,         ""),
+      state:        s(location.state,        ""),
+      country:      s(location.country,      "India"),
       addressType:  "HOME",
       userId:       patientId,
     };
