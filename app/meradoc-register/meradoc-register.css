@@ -7,7 +7,7 @@
 /* ── Left panel ── */
 .mr-left {
   width: 40%;
-  background: #1a4fd4;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: #fff;
   padding: 60px 48px;
   display: flex;
@@ -194,19 +194,19 @@
 .mr-submit {
   width: 100%;
   padding: 14px;
-  background: #1a4fd4;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
+  transition: opacity 0.2s;
   margin-top: 4px;
 }
 
 .mr-submit:hover:not(:disabled) {
-  background: #1540b0;
+  opacity: 0.9;
 }
 
 .mr-submit:disabled {

@@ -74,8 +74,8 @@
 }
 
 .concerns-search input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #1a4fd4;
+  box-shadow: 0 0 0 3px rgba(26, 79, 212, 0.1);
 }
 
 .concerns-search input::placeholder {
@@ -87,7 +87,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, #0f3d6e 0%, #164e8a 100%);
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   border-radius: 14px;
   padding: 18px 24px;
   margin-bottom: 32px;
@@ -165,8 +165,8 @@
 }
 
 .concern-card:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.08);
+  border-color: #1a4fd4;
+  box-shadow: 0 6px 20px rgba(26, 79, 212, 0.1);
   transform: translateY(-2px);
 }
 
@@ -262,7 +262,7 @@
 /* Call to Book Button */
 .concerns-call-btn {
   width: 100%;
-  background: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   padding: 16px;
   border-radius: 12px;
@@ -272,12 +272,12 @@
   border: none;
   cursor: pointer;
   margin-bottom: 60px;
-  transition: background 0.2s;
+  transition: opacity 0.2s;
   font-family: inherit;
 }
 
 .concerns-call-btn:hover {
-  background: #0c3058;
+  opacity: 0.9;
 }
 
 /* ─── Why Choose Us ─── */
@@ -319,7 +319,7 @@
 .why-us-icon-circle {
   width: 52px;
   height: 52px;
-  background: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   border-radius: 14px;
   display: flex;
   align-items: center;

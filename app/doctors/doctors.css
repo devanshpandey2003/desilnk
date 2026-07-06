@@ -63,17 +63,17 @@
 }
 
 .drp-specialty-tag:hover {
-  border-color: #93c5fd;
-  background: #f0f7ff;
-  color: #1e40af;
+  border-color: #1a4fd4;
+  background: #f0f4ff;
+  color: #1a4fd4;
 }
 
 .drp-specialty-tag.active {
-  background: #0f3d6e;
-  border-color: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
+  border-color: #1456d6;
   color: white;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(15, 61, 110, 0.2);
+  box-shadow: 0 2px 8px rgba(26, 79, 212, 0.25);
 }
 
 .drp-tag--skeleton {
@@ -150,8 +150,8 @@
 }
 
 .drp-search input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #1a4fd4;
+  box-shadow: 0 0 0 3px rgba(26, 79, 212, 0.1);
 }
 
 /* ─── Filters ─── */
@@ -177,7 +177,7 @@
 }
 
 .drp-filter-select:focus {
-  border-color: #3b82f6;
+  border-color: #1a4fd4;
 }
 
 .drp-filter-btn {
@@ -232,8 +232,8 @@
 }
 
 .drp-card:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.12);
+  border-color: #1a4fd4;
+  box-shadow: 0 12px 40px rgba(26, 79, 212, 0.14);
   transform: translateY(-4px);
 }
 
@@ -242,7 +242,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #0f3d6e 0%, #1a6fc4 100%);
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   padding: 10px 16px;
   font-size: 0.72rem;
   color: rgba(255,255,255,0.9);
@@ -327,8 +327,8 @@
 .drp-card-price {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #0f3d6e;
-  background: #f0f7ff;
+  color: #1a4fd4;
+  background: #f0f4ff;
   padding: 2px 8px;
   border-radius: 20px;
   flex-shrink: 0;
@@ -336,7 +336,7 @@
 
 .drp-card-specialty {
   font-size: 0.78rem;
-  color: #3b82f6;
+  color: #1a4fd4;
   margin: 0 0 1px;
   font-weight: 600;
 }
@@ -375,7 +375,7 @@
   width: 100%;
   margin-top: 10px;
   padding: 9px 12px;
-  background: linear-gradient(135deg, #0f3d6e 0%, #1a6fc4 100%);
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -390,7 +390,7 @@
 .drp-btn-select:hover {
   opacity: 0.92;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(15, 61, 110, 0.25);
+  box-shadow: 0 4px 14px rgba(26, 79, 212, 0.25);
 }
 
 /* ── Skeleton (updated for vertical grid cards) ── */
@@ -498,7 +498,7 @@
 
 .dd-dc-specialty {
   font-size: 0.9rem;
-  color: #3b82f6;
+  color: #1a4fd4;
   font-weight: 500;
   margin: 0 0 2px;
 }
@@ -533,7 +533,7 @@
   display: block;
   font-size: 1.3rem;
   font-weight: 800;
-  color: #0f3d6e;
+  color: #1a4fd4;
 }
 
 .dd-dc-price-label {
@@ -560,7 +560,7 @@
 }
 
 .dd-step.active {
-  color: #0f3d6e;
+  color: #1a4fd4;
   font-weight: 600;
 }
 
@@ -578,7 +578,7 @@
 }
 
 .dd-step.active span {
-  background: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
 }
 
@@ -629,8 +629,8 @@
 }
 
 .dd-date-chip.active {
-  background: #0f3d6e;
-  border-color: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
+  border-color: #1456d6;
   color: white;
 }
 
@@ -692,13 +692,13 @@
 }
 
 .dd-slot-chip:hover:not(.disabled) {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: #1a4fd4;
+  color: #1a4fd4;
 }
 
 .dd-slot-chip.active {
-  background: #0f3d6e;
-  border-color: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
+  border-color: #1456d6;
   color: white;
 }
 
@@ -719,14 +719,14 @@
 /* Buttons */
 .dd-btn-primary {
   padding: 12px 28px;
-  background: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   border: none;
   border-radius: 10px;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
   font-family: inherit;
   text-decoration: none;
   display: inline-flex;
@@ -735,7 +735,7 @@
 }
 
 .dd-btn-primary:hover:not(:disabled) {
-  background: #0c3058;
+  opacity: 0.9;
   transform: translateY(-1px);
 }
 
@@ -751,7 +751,7 @@
 .dd-btn-secondary {
   padding: 12px 28px;
   background: white;
-  color: #0f3d6e;
+  color: #1a4fd4;
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
   font-weight: 600;
@@ -805,7 +805,7 @@
 }
 
 .dd-form input:focus, .dd-form textarea:focus {
-  border-color: #3b82f6;
+  border-color: #1a4fd4;
 }
 
 .dd-form textarea {
@@ -840,8 +840,8 @@
 }
 
 .dd-mode-btn.active {
-  background: #0f3d6e;
-  border-color: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
+  border-color: #1456d6;
   color: white;
 }
 
@@ -873,7 +873,7 @@
 }
 
 .dd-price-highlight {
-  color: #0f3d6e !important;
+  color: #1a4fd4 !important;
   font-size: 1rem;
 }
 
@@ -931,7 +931,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid #e2e8f0;
-  border-top-color: #0f3d6e;
+  border-top-color: #1a4fd4;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 16px;

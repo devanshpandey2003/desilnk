@@ -151,7 +151,7 @@
 .apt-btn-primary {
   display: inline-block;
   padding: 12px 24px;
-  background: #1a4fd4;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -160,11 +160,11 @@
   cursor: pointer;
   text-decoration: none;
   text-align: center;
-  transition: background 0.2s;
+  transition: opacity 0.2s;
 }
 
 .apt-btn-primary:hover {
-  background: #1540b0;
+  opacity: 0.9;
 }
 
 .apt-btn-secondary {
@@ -234,17 +234,17 @@
 .apt-rx-download {
   padding: 6px 16px;
   border-radius: 6px;
-  background: #1a4fd4;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: #fff;
   font-size: 0.82rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
-  transition: background 0.2s;
+  transition: opacity 0.2s;
 }
 
 .apt-rx-download:hover {
-  background: #1540b0;
+  opacity: 0.9;
 }
 
 /* Sections within a prescription */

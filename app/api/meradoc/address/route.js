@@ -36,6 +36,57 @@ export async function GET(request) {
   }
 }
 
+// PUT /api/meradoc/address — update existing address in MeraDoc
+export async function PUT(request) {
+  try {
+    const { email, patientId, location, addressId } = await request.json();
+    if (!email || !patientId || !location || !addressId) {
+      return NextResponse.json({ error: "email, patientId, location and addressId required" }, { status: 400 });
+    }
+
+    const token = await getAccessToken();
+    if (!token) return NextResponse.json({ error: "Failed to get MeraDoc token" }, { status: 500 });
+
+    const s = (v, fallback = "") => (v == null ? fallback : String(v));
+
+    const body = {
+      name:         s(location.name,         "Patient"),
+      mobileNumber: s(location.mobileNumber, ""),
+      lat:          s(location.lat,          "0"),
+      long:         s(location.long,         "0"),
+      addressLine1: s(location.addressLine1, ""),
+      addressLine2: s(location.addressLine2 || location.addressLine1, "N/A"),
+      district:     s(location.district || location.city, ""),
+      pincode:      s(location.pincode,      ""),
+      city:         s(location.city,         ""),
+      state:        s(location.state,        ""),
+      country:      s(location.country,      "India"),
+      addressType:  "HOME",
+      userId:       patientId,
+    };
+
+    const meraRes = await fetch(`${MERADOC_BASE}/user/api/v1/user/address/update/${addressId}`, {
+      method:  "PUT",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "originToken":   ORIGIN_TOKEN,
+        "Content-Type":  "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const meraJson = await meraRes.json();
+    if (!meraRes.ok) {
+      return NextResponse.json({ error: "MeraDoc update failed", detail: meraJson }, { status: meraRes.status });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("[PUT /api/meradoc/address]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 // POST /api/meradoc/address — create address in MeraDoc + store addressId in DB
 export async function POST(request) {
   try {
@@ -55,7 +106,7 @@ export async function POST(request) {
       lat:          s(location.lat,          "0"),
       long:         s(location.long,         "0"),
       addressLine1: s(location.addressLine1, ""),
-      addressLine2: s(location.addressLine2, ""),
+      addressLine2: s(location.addressLine2 || location.addressLine1, "N/A"),
       district:     s(location.district || location.city, ""),
       pincode:      s(location.pincode,      ""),
       city:         s(location.city,         ""),

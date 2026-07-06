@@ -82,7 +82,7 @@ export default function MedicinesPage() {
 
   const handleCheckout = () => {
     localStorage.setItem("medCart", JSON.stringify(cart));
-    router.push("/consultancy/medicines/cart");
+    router.push("/consultancy/cart?tab=medicines");
   };
 
   return (

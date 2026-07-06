@@ -41,7 +41,7 @@
 }
 
 .title-icon {
-  color: #115ea3;
+  color: #1a4fd4;
 }
 
 /* Filters */
@@ -103,7 +103,7 @@
 }
 
 .dc-header {
-  background: #0d4b85;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   padding: 10px 16px;
   font-size: 0.85rem;
@@ -211,16 +211,16 @@
   width: 100%;
   margin-top: 20px;
   padding: 12px;
-  background: #0d4b85;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: opacity 0.2s;
 }
 
 .btn-select:hover {
-  background: #0a3a69;
+  opacity: 0.9;
 }

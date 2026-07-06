@@ -1,6 +1,6 @@
 .consultancy-layout {
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: #f5f6fa;
   font-family: inherit;
   color: var(--text-primary, #1a1f36);
   display: flex;
@@ -14,8 +14,10 @@
   justify-content: space-between;
   padding: 0 48px;
   height: 72px;
-  background: white;
-  border-bottom: 1px solid #eaeaea;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(232, 234, 240, 0.8);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -35,7 +37,7 @@
 }
 
 .nav-logo svg {
-  color: #3b82f6;
+  color: #1a4fd4;
   width: 32px;
   height: 32px;
 }
@@ -43,7 +45,7 @@
 .nav-logo-text {
   font-size: 18px;
   font-weight: 700;
-  color: #1565c0;
+  color: #1a1f36;
   letter-spacing: -0.3px;
 }
 
@@ -56,7 +58,7 @@
 .nav-links a {
   text-decoration: none;
   font-size: 0.95rem;
-  color: #4a5568;
+  color: #5a6178;
   font-weight: 500;
   transition: color 0.2s;
 }
@@ -72,7 +74,7 @@
 }
 
 .nav-right .btn-get-started {
-  background: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   border: none;
   padding: 10px 24px;
@@ -80,11 +82,12 @@
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: opacity 0.2s, transform 0.2s;
 }
 
 .nav-right .btn-get-started:hover {
-  background: #0c3058;
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 /* ═══════════════════════════════════════════════ */
@@ -93,6 +96,10 @@
 
 .consultancy-main {
   flex: 1;
+  background-image: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
+  background-size: 100% 600px;
+  background-repeat: no-repeat;
+  background-color: #f5f6fa;
 }
 
 .hero-section {
@@ -115,20 +122,21 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 50px;
   padding: 6px 16px;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #15803d;
+  color: white;
   margin-bottom: 24px;
+  backdrop-filter: blur(8px);
 }
 
 .trust-dot {
   width: 8px;
   height: 8px;
-  background: #22c55e;
+  background: #c8e64a;
   border-radius: 50%;
   display: inline-block;
   animation: pulse-dot 2s ease-in-out infinite;
@@ -143,14 +151,14 @@
   font-size: 2.8rem;
   font-weight: 800;
   line-height: 1.15;
-  color: #0f172a;
+  color: white;
   margin: 0 0 20px;
   letter-spacing: -0.02em;
 }
 
 .hero-subtitle {
   font-size: 1.05rem;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.7;
   margin-bottom: 32px;
 }
@@ -168,27 +176,27 @@
   align-items: center;
   gap: 12px;
   padding: 14px 24px;
-  background: #0f3d6e;
-  color: white;
+  background: #c8e64a;
+  color: #1a1f36;
   border: none;
-  border-radius: 14px;
+  border-radius: 50px;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.25s;
   text-align: left;
 }
 
 .btn-talk-now:hover {
-  background: #0c3058;
+  background: #d4f04f;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(15, 61, 110, 0.3);
+  box-shadow: 0 8px 24px rgba(200, 230, 74, 0.4);
 }
 
 .btn-talk-icon {
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(26, 31, 54, 0.12);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -209,7 +217,7 @@
 .avail-dot {
   width: 6px;
   height: 6px;
-  background: #4ade80;
+  background: #0f9b4f;
   border-radius: 50%;
   display: inline-block;
 }
@@ -219,19 +227,20 @@
   align-items: center;
   gap: 8px;
   padding: 14px 24px;
-  background: white;
-  color: #0f172a;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s;
+  backdrop-filter: blur(8px);
 }
 
 .btn-download-app:hover {
-  border-color: #94a3b8;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.55);
   transform: translateY(-2px);
 }
 
@@ -250,19 +259,19 @@
 .stat-number {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #1a4fd4;
+  color: white;
 }
 
 .stat-label {
   font-size: 0.825rem;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.75);
   font-weight: 500;
 }
 
 .hero-stat-divider {
   width: 1px;
   height: 36px;
-  background: #e2e8f0;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Service Cards Grid */
@@ -284,29 +293,30 @@
   align-items: center;
   gap: 8px;
   padding: 24px 12px 20px;
-  background: white;
-  border: 1px solid #e8edf2;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.25s;
   text-align: center;
+  box-shadow: 0 4px 16px rgba(26, 31, 54, 0.12);
 }
 
 .service-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  border-color: #1a4fd4;
+  box-shadow: 0 8px 28px rgba(26, 79, 212, 0.2);
   transform: translateY(-3px);
 }
 
 .service-card--highlighted {
-  background: linear-gradient(145deg, #0f3d6e 0%, #164e8a 100%);
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   border-color: transparent;
   color: white;
-  box-shadow: 0 8px 32px rgba(15, 61, 110, 0.25);
+  box-shadow: 0 8px 32px rgba(20, 86, 214, 0.35);
 }
 
 .service-card--highlighted:hover {
-  box-shadow: 0 12px 40px rgba(15, 61, 110, 0.35);
+  box-shadow: 0 12px 40px rgba(20, 86, 214, 0.45);
   transform: translateY(-4px);
 }
 
@@ -326,7 +336,7 @@
   padding: 3px 8px;
   font-size: 0.65rem;
   font-weight: 600;
-  color: #4ade80;
+  color: #c8e64a;
 }
 
 .service-card-icon {
@@ -337,7 +347,7 @@
   justify-content: center;
   border-radius: 14px;
   margin-bottom: 4px;
-  color: #3b82f6;
+  color: #1a4fd4;
 }
 
 .service-card--highlighted .service-card-icon {
@@ -356,7 +366,7 @@
 
 .service-card-sub {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #5a6178;
   font-weight: 400;
 }
 
@@ -374,13 +384,13 @@
 .section-heading {
   font-size: 2rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #1a1f36;
   margin: 0 0 8px;
 }
 
 .section-subheading {
   font-size: 1rem;
-  color: #64748b;
+  color: #5a6178;
   margin: 0 0 40px;
 }
 
@@ -400,18 +410,18 @@
   gap: 12px;
   width: 110px;
   padding: 24px 8px;
-  background: #f8fafc;
-  border: 1px solid #e8edf2;
+  background: white;
+  border: 1px solid #e8eaf0;
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.25s;
 }
 
 .spec-chip:hover {
-  border-color: #93c5fd;
-  background: #eff6ff;
+  border-color: #1a4fd4;
+  background: #f0f4ff;
   transform: translateY(-3px);
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 4px 16px rgba(26, 79, 212, 0.1);
 }
 
 .spec-chip-icon {
@@ -429,7 +439,7 @@
 .spec-chip-name {
   font-size: 0.825rem;
   font-weight: 600;
-  color: #334155;
+  color: #1a1f36;
   line-height: 1.3;
 }
 
@@ -438,7 +448,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   border-radius: 16px;
   padding: 24px 32px;
   color: white;
@@ -453,7 +463,7 @@
 .care-guide-icon {
   width: 48px;
   height: 48px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -475,7 +485,7 @@
 .btn-get-help {
   padding: 12px 28px;
   background: white;
-  color: #0f3d6e;
+  color: #1a1f36;
   border: none;
   border-radius: 50px;
   font-weight: 700;
@@ -485,7 +495,7 @@
 }
 
 .btn-get-help:hover {
-  background: #f1f5f9;
+  background: #f5f6fa;
   transform: scale(1.03);
 }
 
@@ -503,7 +513,7 @@
 .testimonials-heading {
   font-size: 2rem;
   font-weight: 800;
-  color: #1a4fd4;
+  color: #1a1f36;
   margin: 0 0 8px;
 }
 
@@ -521,14 +531,15 @@
 
 .testimonial-card {
   min-width: 100%;
-  background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 40%, #f0f9ff 100%);
-  border: 1px solid #d1fae5;
+  background: white;
+  border: 1px solid #e8eaf0;
   border-radius: 20px;
   padding: 48px 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  box-shadow: 0 8px 24px rgba(26, 31, 54, 0.06);
 }
 
 .testimonial-stars {
@@ -538,7 +549,7 @@
 
 .testimonial-quote {
   font-size: 1.05rem;
-  color: #475569;
+  color: #5a6178;
   line-height: 1.7;
   font-style: italic;
   margin: 0;
@@ -555,7 +566,7 @@
 .testimonial-avatar {
   width: 44px;
   height: 44px;
-  background: #0f9b8e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -568,12 +579,12 @@
 
 .testimonial-author strong {
   font-size: 0.95rem;
-  color: #0f172a;
+  color: #1a1f36;
 }
 
 .testimonial-author span {
   font-size: 0.825rem;
-  color: #94a3b8;
+  color: #5a6178;
 }
 
 /* Carousel Controls */
@@ -590,19 +601,19 @@
   height: 40px;
   border-radius: 50%;
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8eaf0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #64748b;
+  color: #5a6178;
   transition: all 0.2s;
 }
 
 .carousel-arrow:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: #f0f4ff;
+  border-color: #1a4fd4;
+  color: #1a4fd4;
 }
 
 .carousel-dots {
@@ -614,14 +625,14 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #cbd5e1;
+  background: #d1d5db;
   border: none;
   cursor: pointer;
   transition: all 0.25s;
 }
 
 .carousel-dot.active {
-  background: #3b82f6;
+  background: #1a4fd4;
   transform: scale(1.25);
 }
 
@@ -637,11 +648,13 @@
   max-width: 1240px;
   margin: 0 auto;
   padding: 80px 48px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%);
+  background: white;
+  border: 1px solid #e8eaf0;
   border-radius: 24px;
   margin-bottom: 60px;
   margin-left: auto;
   margin-right: auto;
+  box-shadow: 0 4px 24px rgba(26, 31, 54, 0.06);
 }
 
 .app-left {
@@ -652,14 +665,14 @@
 .app-heading {
   font-size: 2.2rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #1a1f36;
   line-height: 1.2;
   margin: 0 0 16px;
 }
 
 .app-description {
   font-size: 0.95rem;
-  color: #64748b;
+  color: #5a6178;
   line-height: 1.7;
   margin-bottom: 28px;
 }
@@ -678,7 +691,7 @@
   align-items: center;
   gap: 12px;
   font-size: 0.95rem;
-  color: #334155;
+  color: #1a1f36;
   font-weight: 500;
 }
 
@@ -692,7 +705,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 20px;
-  background: #0f172a;
+  background: #1a1f36;
   color: white;
   border: none;
   border-radius: 10px;
@@ -701,7 +714,7 @@
 }
 
 .store-badge:hover {
-  background: #1e293b;
+  background: #2a3050;
   transform: translateY(-2px);
 }
 
@@ -726,10 +739,10 @@
 
 .phone-mockup {
   width: 280px;
-  background: #1e293b;
+  background: #1a1f36;
   border-radius: 36px;
   padding: 12px;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 24px 48px rgba(26, 31, 54, 0.2);
 }
 
 .phone-screen {
@@ -752,7 +765,7 @@
 .phone-search-bar {
   flex: 1;
   height: 28px;
-  background: #f1f5f9;
+  background: #f5f6fa;
   border-radius: 8px;
 }
 
@@ -778,7 +791,7 @@
 }
 
 .phone-talk-banner {
-  background: linear-gradient(135deg, #0f3d6e 0%, #164e8a 100%);
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   border-radius: 12px;
   padding: 12px 14px;
   color: white;
@@ -808,8 +821,8 @@
   align-items: center;
   gap: 4px;
   padding: 10px 4px;
-  background: #f8fafc;
-  border: 1px solid #e8edf2;
+  background: #f5f6fa;
+  border: 1px solid #e8eaf0;
   border-radius: 10px;
   flex: 1;
 }
@@ -820,7 +833,7 @@
 
 .pqa-item small {
   font-size: 0.55rem;
-  color: #64748b;
+  color: #5a6178;
   text-align: center;
   line-height: 1.2;
 }
@@ -834,12 +847,12 @@
 
 .phone-specialties-header strong {
   font-size: 0.7rem;
-  color: #0f172a;
+  color: #1a1f36;
 }
 
 .phone-specialties-header span {
   font-size: 0.6rem;
-  color: #3b82f6;
+  color: #1a4fd4;
   font-weight: 600;
 }
 
@@ -861,12 +874,12 @@
 
 .ps-item small {
   font-size: 0.6rem;
-  color: #475569;
+  color: #5a6178;
   font-weight: 500;
 }
 
 .phone-cta-bar {
-  background: #0f3d6e;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   border-radius: 10px;
   padding: 10px 14px;
@@ -945,8 +958,8 @@
   left: 0;
   right: 0;
   background: white;
-  border-bottom: 1px solid #eaeaea;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e8eaf0;
+  box-shadow: 0 8px 24px rgba(26, 31, 54, 0.1);
   z-index: 99;
   flex-direction: column;
   padding: 8px 0 16px;
@@ -957,13 +970,13 @@
   padding: 14px 24px;
   font-size: 1rem;
   font-weight: 500;
-  color: #4a5568;
+  color: #5a6178;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
 }
 
 .mobile-nav-link:hover {
-  background: #f5f7fa;
+  background: #f5f6fa;
   color: #1a4fd4;
 }
 
@@ -1089,7 +1102,7 @@
 .address-page {
   position: relative;
   min-height: calc(100vh - 72px);
-  background: #e2e8f0;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1098,7 +1111,7 @@
 .address-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .address-card {
@@ -1108,7 +1121,7 @@
   padding: 40px;
   width: 100%;
   max-width: 600px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(26, 31, 54, 0.15);
   z-index: 10;
   text-align: center;
 }
@@ -1116,15 +1129,16 @@
 .address-card h2 {
   font-size: 1.4rem;
   font-weight: 700;
+  color: #1a1f36;
   margin-bottom: 24px;
 }
 
 .btn-current-loc {
   width: 100%;
-  background: #115ea3;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   padding: 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   border: none;
   cursor: pointer;
@@ -1133,16 +1147,17 @@
   justify-content: center;
   gap: 8px;
   margin-bottom: 24px;
+  transition: opacity 0.2s;
 }
 
 .btn-current-loc:hover {
-  background: #0f518e;
+  opacity: 0.9;
 }
 
 .address-divider {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #475569;
+  color: #5a6178;
   text-align: left;
   margin-bottom: 12px;
 }
@@ -1163,25 +1178,27 @@
 .address-input {
   width: 100%;
   padding: 14px 16px 14px 44px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border: 1px solid #e8eaf0;
+  border-radius: 10px;
   font-size: 0.95rem;
   outline: none;
-  color: #475569;
+  color: #1a1f36;
+  transition: border-color 0.15s;
 }
 
 .address-input:focus {
-  border-color: #115ea3;
+  border-color: #1a4fd4;
+  box-shadow: 0 0 0 3px rgba(26, 79, 212, 0.1);
 }
 
 .address-select {
   width: 100%;
   padding: 14px 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border: 1px solid #e8eaf0;
+  border-radius: 10px;
   font-size: 0.95rem;
   outline: none;
-  color: #475569;
+  color: #1a1f36;
   background-color: white;
   margin-bottom: 24px;
   cursor: pointer;
@@ -1189,17 +1206,18 @@
 
 .btn-submit {
   width: 100%;
-  background: #115ea3;
+  background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   padding: 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   border: none;
   cursor: pointer;
+  transition: opacity 0.2s;
 }
 
 .btn-submit:hover {
-  background: #0f518e;
+  opacity: 0.9;
 }
 
 /* ── Nav cart + address (lab-tests / medicines only) ── */
@@ -1208,7 +1226,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #e8eaf0;
   border-radius: 20px;
   text-decoration: none;
   color: #1a1f36;
@@ -1219,7 +1237,7 @@
 }
 .nav-address-pill:hover { border-color: #1a4fd4; background: #f0f4ff; }
 .nav-address-pill svg   { color: #1a4fd4; flex-shrink: 0; }
-.nav-address-label      { display: block; color: #6b7280; font-size: 0.72rem; }
+.nav-address-label      { display: block; color: #5a6178; font-size: 0.72rem; }
 .nav-address-pill strong{ display: block; color: #1a1f36; font-size: 0.85rem; }
 
 .nav-cart-btn {
@@ -1230,7 +1248,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #e8eaf0;
   color: #1a1f36;
   text-decoration: none;
   transition: border-color 0.2s, background 0.2s;
@@ -1257,7 +1275,7 @@
 /* ── Cart page tabs ── */
 .cart-tabs {
   display: flex;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid #e8eaf0;
   margin-bottom: 1.5rem;
 }
 .cart-tab {
@@ -1267,7 +1285,7 @@
   border: none;
   font-size: 0.95rem;
   font-weight: 500;
-  color: #6b7280;
+  color: #5a6178;
   cursor: pointer;
   border-bottom: 3px solid transparent;
   margin-bottom: -2px;

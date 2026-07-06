@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { DiagnosticService } from "../../../services/diagnostic.service";
 import { UserService } from "../../../services/user.service";
@@ -32,8 +32,279 @@ const slotLabel = (s) => {
 };
 const slotId = (s) => s.slotId || s.slot_id || s._id || s.slotNo || s.slotNumber || s.id;
 
+// ── Medicine Order View ───────────────────────────────────────────────────────
+function MedOrderView({ medCart, location, onDone, onBack }) {
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [loading,       setLoading]       = useState(false);
+  const [error,         setError]         = useState("");
+
+  const hasRx    = medCart.some(i => i.product?.additonalInfo?.isRxRequired);
+  const medTotal = medCart.reduce((s, i) => s + (parseFloat(i.product?.pricingInfo?.discountedMrp || i.product?.pricingInfo?.mrp || 0) * i.qty), 0);
+
+  useEffect(() => {
+    try { setPrescriptions(JSON.parse(localStorage.getItem("medPrescriptions") || "[]")); } catch {}
+  }, []);
+
+  const canOrder = location && (!hasRx || prescriptions.length > 0);
+
+  const handleOrder = async () => {
+    setLoading(true); setError("");
+    try {
+      const email = localStorage.getItem("userEmail") || "";
+
+      const addrRes = await fetch(`/api/meradoc/address?email=${encodeURIComponent(email)}`);
+      const { addressId } = await addrRes.json();
+      if (!addressId) { setError("Delivery address not synced. Please re-save your address."); return; }
+
+      const token = localStorage.getItem("accessToken") || "";
+      const res   = await fetch("/api/medicine/order", {
+        method:  "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${token}`,
+          "x-user-email":  email,
+        },
+        body: JSON.stringify({
+          addressId,
+          items: medCart.map(i => ({
+            productId:    i.product.productId,
+            quantity:     i.qty,
+            isPrescribed: i.product.additonalInfo?.isRxRequired || false,
+          })),
+          ...(prescriptions.length ? { prescriptions: prescriptions.map(p => ({
+            fileName: p.fileName,
+            filePath: `prescriptions/${p.fileName}`,
+          })) } : {}),
+        }),
+      });
+      const json = await res.json();
+
+      if (json.status === 200 || json.data?._id || json.data?.orderId) {
+        const orderId = json.data?._id || json.data?.orderId || "N/A";
+        localStorage.removeItem("medCart");
+        localStorage.removeItem("medPrescriptions");
+        window.dispatchEvent(new Event("lt-nav-update"));
+        onDone(orderId);
+      } else {
+        setError(json.message || "Order failed. Please try again.");
+      }
+    } catch { setError("Something went wrong. Please try again."); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <>
+      <div className="lt-co-card">
+        <button className="lt-back-btn" style={{ marginBottom: "0.75rem" }} onClick={onBack}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Back
+        </button>
+        <h4 className="lt-section-label">📍 Delivery Address</h4>
+        {location ? (
+          <>
+            <p className="lt-co-address">{location.addressLine1}</p>
+            {(location.city || location.state) && <p className="lt-co-address-sub">{location.city}{location.state ? `, ${location.state}` : ""} — {location.pincode}</p>}
+          </>
+        ) : (
+          <p className="lt-hint"><Link href="/consultancy/lab-tests/address?for=medicines" style={{ color: "#1a4fd4" }}>Set delivery address →</Link></p>
+        )}
+      </div>
+
+      {hasRx && (
+        <div className="lt-co-card">
+          <h4 className="lt-section-label">📋 Prescription</h4>
+          {prescriptions.length > 0 ? (
+            <>
+              {prescriptions.map(p => (
+                <div key={p.fileName} style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "0.4rem" }}>
+                  <span>{p.fileType === "application/pdf" ? "📄" : "🖼️"}</span>
+                  <span style={{ fontSize: "0.85rem", color: "#1a1f36" }}>{p.fileName}</span>
+                  <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>({(p.size / 1024).toFixed(1)} KB)</span>
+                </div>
+              ))}
+              <Link href="/consultancy/medicines/prescription" style={{ fontSize: "0.8rem", color: "#1a4fd4" }}>Change prescription</Link>
+            </>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <p className="lt-hint" style={{ color: "#92400e" }}>One or more items require a prescription.</p>
+              <Link href="/consultancy/medicines/prescription" style={{ color: "#1a4fd4", fontWeight: 600, fontSize: "0.88rem" }}>📋 Upload Prescription →</Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="lt-co-card">
+        <h4 className="lt-section-label">Bill Summary</h4>
+        {medCart.map(({ product, qty }) => (
+          <div key={product.productId} className="lt-bill-row">
+            <span>{product.name.length > 30 ? product.name.slice(0, 30) + "…" : product.name} × {qty}</span>
+            <span>₹{(parseFloat(product.pricingInfo?.discountedMrp || product.pricingInfo?.mrp || 0) * qty).toFixed(2)}</span>
+          </div>
+        ))}
+        <div className="lt-bill-divider" />
+        <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span>₹{medTotal.toFixed(2)}</span></div>
+      </div>
+
+      {error && <p className="lt-error" style={{ padding: "0 0 0.5rem" }}>{error}</p>}
+
+      <div className="lt-cart-footer">
+        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total">₹{medTotal.toFixed(2)}</p></div>
+        <button className="lt-proceed-btn" disabled={!canOrder || loading} onClick={handleOrder}>
+          {loading ? "Placing Order…" : "Place Order →"}
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ── Medicine Cart Tab (needs hooks for availability) ──────────────────────────
+function MedCartTab({ medCart, setMedCart, location, onMedProceed }) {
+  const [avail,        setAvail]        = useState({}); // { [ucode]: true | false }
+  const [availLoading, setAvailLoading] = useState(false);
+  const [availChecked, setAvailChecked] = useState(false);
+
+  // Run availability check whenever cart or pincode changes
+  useEffect(() => {
+    if (!location?.pincode || medCart.length === 0) { setAvail({}); setAvailChecked(false); return; }
+    const ucodes = medCart.map(i => i.product.ucode).filter(Boolean);
+    if (ucodes.length === 0) { setAvailChecked(true); return; }
+
+    setAvailLoading(true);
+    fetch("/api/medicine/availability", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pincode: location.pincode, ucodes }),
+    })
+      .then(r => r.json())
+      .then(j => { setAvail(j.availability || {}); })
+      .catch(() => {})
+      .finally(() => { setAvailLoading(false); setAvailChecked(true); });
+  }, [location?.pincode, medCart.length]);
+
+  const updateMedQty = (productId, delta) => {
+    const updated = medCart.map(i => i.product.productId === productId ? { ...i, qty: i.qty + delta } : i).filter(i => i.qty > 0);
+    setMedCart(updated);
+    localStorage.setItem("medCart", JSON.stringify(updated));
+    window.dispatchEvent(new Event("lt-nav-update"));
+  };
+  const removeMed = (productId) => {
+    const updated = medCart.filter(i => i.product.productId !== productId);
+    setMedCart(updated);
+    localStorage.setItem("medCart", JSON.stringify(updated));
+    window.dispatchEvent(new Event("lt-nav-update"));
+  };
+
+  const medTotal      = medCart.reduce((s, i) => s + (parseFloat(i.product?.pricingInfo?.discountedMrp || i.product?.pricingInfo?.mrp || 0) * i.qty), 0);
+  // Block proceed if any item failed the availability check (only after check completes)
+  const hasUnavailable = availChecked && medCart.some(i => i.product.ucode && avail[i.product.ucode] === false);
+
+  return (
+    <>
+      <div className="lt-co-card">
+        <h4 className="lt-section-label">
+          💊 Medicines
+          {availLoading && <span style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: 400, marginLeft: "0.5rem" }}>Checking availability…</span>}
+        </h4>
+        {medCart.length === 0 ? (
+          <p className="lt-hint">Your medicines cart is empty. <Link href="/consultancy/medicines" style={{ color: "#1a4fd4" }}>Browse medicines →</Link></p>
+        ) : medCart.map(({ product, qty }) => {
+          const price       = parseFloat(product.pricingInfo?.discountedMrp || product.pricingInfo?.mrp || 0);
+          const mrp         = parseFloat(product.pricingInfo?.mrp || 0);
+          const pct         = mrp > price ? Math.round((1 - price / mrp) * 100) : 0;
+          const img         = product.productImage?.find(i => i.face === "front")?.url || product.productImage?.[0]?.url;
+          const isAvailable = !availChecked || !product.ucode || avail[product.ucode] !== false;
+          return (
+            <div key={product.productId} className="lt-cart-item" style={{ alignItems: "flex-start", opacity: isAvailable ? 1 : 0.65 }}>
+              {img
+                ? <img src={img} alt={product.name} style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, background: "#f3f4f6", flexShrink: 0 }} />
+                : <div className="lt-cart-thumb">💊</div>
+              }
+              <div className="lt-cart-info" style={{ flex: 1 }}>
+                <p className="lt-cart-name">{product.name}</p>
+                <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: "0.25rem" }}>
+                  {product.additonalInfo?.isRxRequired && <span className="lt-badge" style={{ background: "#fef3c7", color: "#92400e" }}>Rx Required</span>}
+                  {availChecked && product.ucode && (
+                    isAvailable
+                      ? <span className="lt-badge" style={{ background: "#dcfce7", color: "#166534" }}>✓ Available</span>
+                      : <span className="lt-badge" style={{ background: "#fee2e2", color: "#991b1b" }}>✕ Not available at {location?.pincode}</span>
+                  )}
+                </div>
+                <div className="lt-cart-price-row">
+                  {pct > 0 && <span className="lt-mrp">₹{mrp}</span>}
+                  {pct > 0 && <span className="lt-badge">{pct}% OFF</span>}
+                  <span className="lt-disc">₹{(price * qty).toFixed(2)}</span>
+                </div>
+                {isAvailable && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.4rem" }}>
+                    <button onClick={() => updateMedQty(product.productId, -1)} style={{ width: 26, height: 26, borderRadius: 6, border: "none", background: "#1a4fd4", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "1rem" }}>−</button>
+                    <span style={{ fontWeight: 700, minWidth: 20, textAlign: "center" }}>{qty}</span>
+                    <button onClick={() => updateMedQty(product.productId, +1)} style={{ width: 26, height: 26, borderRadius: 6, border: "none", background: "#1a4fd4", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "1rem" }}>+</button>
+                  </div>
+                )}
+                {!isAvailable && (
+                  <button onClick={() => removeMed(product.productId)} style={{ fontSize: "0.78rem", color: "#dc2626", background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: "0.3rem" }}>
+                    Remove from cart
+                  </button>
+                )}
+              </div>
+              {isAvailable && (
+                <button className="lt-delete-btn" onClick={() => removeMed(product.productId)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              )}
+            </div>
+          );
+        })}
+        {hasUnavailable && (
+          <p style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "0.5rem", padding: "0.5rem 0.75rem", background: "#fee2e2", borderRadius: 8 }}>
+            Some items are not deliverable to your pincode. Please remove them to continue.
+          </p>
+        )}
+      </div>
+
+      <div className="lt-co-card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h4 className="lt-section-label">📍 Delivery Address</h4>
+          <Link href="/consultancy/lab-tests/address?for=medicines" style={{ fontSize: "0.82rem", color: "#1a4fd4" }}>Change</Link>
+        </div>
+        {location ? (
+          <>
+            <p className="lt-co-address">{location.addressLine1}</p>
+            {(location.city || location.state) && <p className="lt-co-address-sub">{location.city}{location.state ? `, ${location.state}` : ""} — {location.pincode}</p>}
+          </>
+        ) : (
+          <p className="lt-hint"><Link href="/consultancy/lab-tests/address?for=medicines" style={{ color: "#1a4fd4" }}>Set your delivery address →</Link></p>
+        )}
+      </div>
+
+      {medCart.length > 0 && (
+        <div className="lt-co-card">
+          <h4 className="lt-section-label">Bill Summary</h4>
+          <div className="lt-bill-row"><span>Items ({medCart.reduce((s, i) => s + i.qty, 0)})</span><span>₹{medTotal.toFixed(2)}</span></div>
+          <div className="lt-bill-row"><span>Delivery</span><span>₹0</span></div>
+          <div className="lt-bill-divider" />
+          <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span>₹{medTotal.toFixed(2)}</span></div>
+        </div>
+      )}
+
+      <div className="lt-cart-footer">
+        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total">₹{medTotal.toFixed(2)}</p></div>
+        {!location ? (
+          <Link href="/consultancy/lab-tests/address?for=medicines" className="lt-proceed-btn" style={{ textDecoration: "none", textAlign: "center" }}>
+            Add Delivery Address
+          </Link>
+        ) : (
+          <button className="lt-proceed-btn" disabled={medCart.length === 0 || hasUnavailable || availLoading} onClick={onMedProceed}>
+            {availLoading ? "Checking…" : hasUnavailable ? "Remove unavailable items" : "Proceed to Order"}
+          </button>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ── Cart Items View ───────────────────────────────────────────────────────────
-function CartView({ tab, labCart, setLabCart, location, onProceed }) {
+function CartView({ tab, labCart, setLabCart, medCart, setMedCart, location, onProceed, onMedProceed }) { // medCart/setMedCart/onMedProceed passed through to MedCartTab
   const removeItem = (id) => {
     const updated = labCart.filter((t) => (t._id || t.id) !== id);
     setLabCart(updated);
@@ -109,21 +380,25 @@ function CartView({ tab, labCart, setLabCart, location, onProceed }) {
       )}
 
       {tab === "medicines" && (
-        <div className="lt-co-card">
-          <h4 className="lt-section-label">💊 Medicines</h4>
-          <p className="lt-hint">Your medicines cart is empty.</p>
-        </div>
+        <MedCartTab
+          medCart={medCart}
+          setMedCart={setMedCart}
+          location={location}
+          onMedProceed={onMedProceed}
+        />
       )}
 
-      <div className="lt-cart-footer">
-        <div>
-          <p className="lt-cart-footer-label">Total Amount</p>
-          <p className="lt-cart-footer-total">₹{tab === "lab" ? totalDisc : 0}</p>
+      {tab === "lab" && (
+        <div className="lt-cart-footer">
+          <div>
+            <p className="lt-cart-footer-label">Total Amount</p>
+            <p className="lt-cart-footer-total">₹{totalDisc}</p>
+          </div>
+          <button className="lt-proceed-btn" disabled={labCart.length === 0 || !location} onClick={onProceed}>
+            Proceed to Book
+          </button>
         </div>
-        <button className="lt-proceed-btn" disabled={tab === "lab" ? labCart.length === 0 || !location : true} onClick={onProceed}>
-          Proceed to Book
-        </button>
-      </div>
+      )}
     </>
   );
 }
@@ -443,18 +718,22 @@ function SuccessView({ orderId, isPending }) {
 
 // ── Root ──────────────────────────────────────────────────────────────────────
 export default function CartPage() {
-  const [tab,      setTab]      = useState("lab");
-  const [view,     setView]     = useState("cart"); // cart | slots | checkout | success
+  const searchParams = useSearchParams();
+  const [tab,      setTab]      = useState(searchParams.get("tab") === "medicines" ? "medicines" : "lab");
+  const [view,     setView]     = useState("cart"); // cart | slots | checkout | med-order | success
   const [labCart,  setLabCart]  = useState([]);
+  const [medCart,  setMedCart]  = useState([]);
   const [location, setLocation] = useState(null);
   const [profile,  setProfile]  = useState(null);
   const [slotInfo, setSlotInfo] = useState(null);
   const [orderId,  setOrderId]  = useState(null);
   const [isPending,setIsPending]= useState(false);
+  const [medOrderId, setMedOrderId] = useState(null);
 
   useEffect(() => {
-    // Load cart from localStorage
-    try { const c = JSON.parse(localStorage.getItem("ltCart") || "[]"); setLabCart(c); } catch {}
+    // Load carts from localStorage
+    try { const c = JSON.parse(localStorage.getItem("ltCart")  || "[]"); setLabCart(c); } catch {}
+    try { const m = JSON.parse(localStorage.getItem("medCart") || "[]"); setMedCart(m); } catch {}
 
     // Load profile
     const email     = localStorage.getItem("userEmail")   || "";
@@ -494,7 +773,27 @@ export default function CartPage() {
     }
   }, []);
 
-  if (view === "success") return <SuccessView orderId={orderId} isPending={isPending} />;
+  const medCount = medCart.reduce((s, i) => s + i.qty, 0);
+
+  if (view === "success")     return <SuccessView orderId={orderId} isPending={isPending} />;
+  if (view === "med-success") return (
+    <div className="lt-success-wrap">
+      <div className="lt-success-card animate-fade-in">
+        <div className="lt-success-icon">✅</div>
+        <h2>Order Placed!</h2>
+        <p>Your medicines will be delivered to your address.</p>
+        {medOrderId && medOrderId !== "N/A" && (
+          <div className="lt-order-id-box"><span>Order ID</span><strong>{medOrderId}</strong></div>
+        )}
+        <button className="lt-btn-submit" onClick={() => window.location.href = "/consultancy/profile"} style={{ marginTop: "1rem" }}>
+          Track Order
+        </button>
+        <button className="lt-btn-submit" onClick={() => window.location.href = "/consultancy/medicines"} style={{ marginTop: "0.5rem", background: "#f1f5f9", color: "#1a1f36" }}>
+          Order More Medicines
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="lt-cart-wrap" style={{ maxWidth: 860, margin: "2rem auto", padding: "0 1rem 6rem" }}>
@@ -502,7 +801,7 @@ export default function CartPage() {
       {view === "cart" && (
         <div className="cart-tabs">
           <button className={`cart-tab ${tab === "medicines" ? "active" : ""}`} onClick={() => setTab("medicines")}>
-            💊 Medicines (0)
+            💊 Medicines ({medCount})
           </button>
           <button className={`cart-tab ${tab === "lab" ? "active" : ""}`} onClick={() => setTab("lab")}>
             🧪 Lab Tests ({labCart.length})
@@ -515,8 +814,20 @@ export default function CartPage() {
           tab={tab}
           labCart={labCart}
           setLabCart={setLabCart}
+          medCart={medCart}
+          setMedCart={setMedCart}
           location={location}
           onProceed={() => setView("slots")}
+          onMedProceed={() => setView("med-order")}
+        />
+      )}
+
+      {view === "med-order" && (
+        <MedOrderView
+          medCart={medCart}
+          location={location}
+          onBack={() => setView("cart")}
+          onDone={(id) => { setMedOrderId(id); setView("med-success"); }}
         />
       )}
 
