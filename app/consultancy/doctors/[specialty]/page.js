@@ -4,6 +4,7 @@ import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDoctors, useGenerateToken } from "../../../../hooks/useApi";
+import { Stagger, StaggerItem } from "@/components/motion";
 import "../doctors.css";
 
 // Helper icons
@@ -116,7 +117,7 @@ export default function DoctorSpecialtyPage({ params: paramsPromise }) {
       </div>
 
       {/* Filters */}
-      <div className="filters-bar animate-fade-in">
+      <div className="filters-bar">
         <select className="filter-select">
           <option>Relevance</option>
           <option>Experience: High to Low</option>
@@ -138,33 +139,47 @@ export default function DoctorSpecialtyPage({ params: paramsPromise }) {
       )}
 
       {/* Doctor List */}
-      <div className="doctors-list">
-        {isLoading ? (
-          <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
-            Loading {formattedSpecialty} doctors...
-          </div>
-        ) : isError ? (
-          <div style={{ padding: "40px", textAlign: "center", color: "#ef4444" }}>
-            Failed to load doctors. Please try again.
-          </div>
-        ) : doctorsList.length === 0 ? (
-          <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
-            <p style={{ fontSize: "18px", marginBottom: "8px" }}>
-              No {formattedSpecialty} doctors available right now
-            </p>
-            <p style={{ fontSize: "14px" }}>
-              Try browsing all doctors or a different specialty.
-            </p>
-            <button
-              style={{ marginTop: "16px", padding: "10px 24px", background: "#0f3d6e", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}
-              onClick={() => router.push("/doctors")}
-            >
-              Browse All Doctors
-            </button>
-          </div>
-        ) : (
-          doctorsList.map((doc) => (
-            <div key={doc.id} className="doctor-card animate-fade-in">
+      {isLoading ? (
+        <div className="doctors-list">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="doctor-card doctor-card--skeleton">
+              <div className="dc-header skeleton" style={{ height: 32 }} />
+              <div className="dc-body">
+                <div className="dc-core-info">
+                  <div className="dc-avatar-skeleton skeleton" />
+                  <div className="dc-details" style={{ width: "100%" }}>
+                    <div className="dc-line skeleton" style={{ width: "50%" }} />
+                    <div className="dc-line skeleton" style={{ width: "35%" }} />
+                    <div className="dc-line skeleton" style={{ width: "70%" }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : isError ? (
+        <div style={{ padding: "40px", textAlign: "center", color: "#ef4444" }}>
+          Failed to load doctors. Please try again.
+        </div>
+      ) : doctorsList.length === 0 ? (
+        <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+          <p style={{ fontSize: "18px", marginBottom: "8px" }}>
+            No {formattedSpecialty} doctors available right now
+          </p>
+          <p style={{ fontSize: "14px" }}>
+            Try browsing all doctors or a different specialty.
+          </p>
+          <button
+            style={{ marginTop: "16px", padding: "10px 24px", background: "#0f3d6e", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}
+            onClick={() => router.push("/doctors")}
+          >
+            Browse All Doctors
+          </button>
+        </div>
+      ) : (
+        <Stagger className="doctors-list">
+          {doctorsList.map((doc) => (
+            <StaggerItem key={doc.id} className="doctor-card">
               <div className="dc-header">
                 {doc.experience} Years Experience
                 {doc.consultationCount > 0 && (
@@ -224,10 +239,10 @@ export default function DoctorSpecialtyPage({ params: paramsPromise }) {
                   </div>
                 </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            </StaggerItem>
+          ))}
+        </Stagger>
+      )}
     </div>
   );
 }

@@ -22,7 +22,12 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  transition: background 0.2s;
+  transition: background var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
+}
+
+.btn-back-doctors:active {
+  transform: scale(0.94);
 }
 
 .btn-back-doctors:hover {
@@ -65,6 +70,12 @@
   outline: none;
   min-width: 200px;
   cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft);
+}
+
+.filter-select:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 
 .btn-filter {
@@ -78,11 +89,16 @@
   color: #1e293b;
   font-weight: 500;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-filter:hover {
   background: #f8fafc;
+}
+
+.btn-filter:active {
+  transform: scale(0.97);
 }
 
 /* Doctor List */
@@ -96,10 +112,35 @@
 /* Specific Card replicating Image Constraints */
 .doctor-card {
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: white;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  transition: transform var(--dur-med) var(--ease-out-soft),
+    box-shadow var(--dur-med) var(--ease-out-soft);
+}
+
+.doctor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Doctor card skeleton (loading state) */
+.doctor-card--skeleton {
+  pointer-events: none;
+}
+
+.doctor-card--skeleton .dc-avatar-skeleton {
+  width: 90px;
+  height: 90px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.doctor-card--skeleton .dc-line {
+  height: 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
 }
 
 .dc-header {
@@ -218,9 +259,15 @@
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-select:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-select:active {
+  transform: translateY(0) scale(0.98);
 }

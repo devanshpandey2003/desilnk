@@ -36,9 +36,14 @@
   padding: 1.5rem 1.5rem 0; flex-wrap: wrap;
   max-width: 900px; margin: 0 auto;
 }
+.med-feature-item {
+  flex: 1; min-width: 160px; max-width: 220px;
+  display: flex;
+}
 .med-feature-card {
-  background: #fff; border-radius: 12px;
+  background: #fff; border-radius: var(--radius-sm);
   padding: 1.2rem 1.5rem; flex: 1; min-width: 160px; max-width: 220px;
+  width: 100%;
   text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   border: 1px solid #e5e7eb;
 }
@@ -77,9 +82,13 @@
 .med-card {
   background: #fff; border-radius: 14px; padding: 1rem 1.2rem;
   border: 1.5px solid #e5e7eb; display: flex; gap: 1rem;
-  align-items: flex-start; transition: border-color 0.15s, box-shadow 0.15s;
+  align-items: flex-start;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
+  animation: fadeUp var(--dur-med) var(--ease-out-soft) backwards;
 }
-.med-card:hover { border-color: #1a4fd4; box-shadow: 0 2px 12px rgba(26,79,212,0.08); }
+.med-card:hover { border-color: #1a4fd4; box-shadow: 0 2px 12px rgba(26,79,212,0.08); transform: translateY(-2px); }
 
 .med-card-img {
   width: 64px; height: 64px; object-fit: contain; border-radius: 8px;
@@ -117,6 +126,7 @@
   cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
 }
 .med-btn-add:hover { opacity: 0.88; }
+.med-btn-add:active:not(:disabled) { transform: scale(0.96); }
 .med-btn-add:disabled { opacity: 0.45; cursor: default; }
 
 .med-qty-ctrl {
@@ -126,9 +136,10 @@
   width: 28px; height: 28px; border-radius: 6px; border: none;
   background: #1a4fd4; color: #fff; font-size: 1rem; font-weight: 700;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s;
+  transition: background var(--dur-fast) var(--ease-out-soft), transform var(--dur-fast) var(--ease-out-soft);
 }
 .med-qty-btn:hover { background: #1440b0; }
+.med-qty-btn:active { transform: scale(0.9); }
 .med-qty-num { font-size: 0.9rem; font-weight: 700; color: #1a1f36; min-width: 20px; text-align: center; }
 
 /* Empty / loading states */
@@ -144,10 +155,15 @@
 }
 @keyframes med-spin { to { transform: rotate(360deg); } }
 
+/* Search loading skeleton */
+.med-skeleton-img { width: 64px; height: 64px; border-radius: 8px; flex-shrink: 0; }
+
 /* ── Cart Panel ─────────────────────────────────────────────────────────────── */
 .med-cart-panel {
   background: #fff; border-radius: 14px; border: 1.5px solid #e5e7eb;
   padding: 1.2rem; height: fit-content; position: sticky; top: 80px;
+  box-shadow: var(--shadow-lg);
+  animation: panelIn var(--dur-med) var(--ease-out-soft) both;
 }
 .med-cart-panel h3 {
   font-size: 0.95rem; font-weight: 700; color: #1a1f36;
@@ -192,6 +208,7 @@
   cursor: pointer; transition: opacity 0.2s; margin-top: 0.85rem;
 }
 .med-btn-checkout:hover:not(:disabled) { opacity: 0.88; }
+.med-btn-checkout:active:not(:disabled) { transform: scale(0.98); }
 .med-btn-checkout:disabled { opacity: 0.45; cursor: default; }
 
 /* Mobile floating cart */

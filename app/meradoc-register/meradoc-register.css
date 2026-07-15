@@ -66,21 +66,23 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 18px;
+  gap: 16px;
   overflow-y: auto;
+  box-shadow: var(--shadow-md);
+  animation: fadeUp var(--dur-med) var(--ease-out-soft);
 }
 
 .mr-subtitle {
   font-size: 0.9rem;
   color: #6b7280;
-  margin: 0 0 4px;
+  margin: 0 0 8px;
 }
 
 /* Fields */
 .mr-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .mr-field label {
@@ -97,13 +99,15 @@
   font-size: 0.9rem;
   color: #1a1f36;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft);
   background: #fff;
 }
 
 .mr-field input:focus,
 .mr-field select:focus {
   border-color: #1a4fd4;
+  box-shadow: var(--focus-ring);
 }
 
 
@@ -146,7 +150,7 @@
 /* DOB row */
 .mr-dob-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .mr-dob-row select {
@@ -157,7 +161,7 @@
 .mr-terms {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 0.85rem;
   color: #374151;
   cursor: pointer;
@@ -180,6 +184,7 @@
   font-size: 0.85rem;
   color: #dc2626;
   margin: 0;
+  animation: bannerIn var(--dur-med) var(--ease-out-soft);
 }
 
 /* Field hint */
@@ -201,12 +206,17 @@
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s;
-  margin-top: 4px;
+  transition: opacity var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
+  margin-top: 8px;
 }
 
 .mr-submit:hover:not(:disabled) {
   opacity: 0.9;
+}
+
+.mr-submit:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .mr-submit:disabled {

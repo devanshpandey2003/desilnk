@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
+import { Reveal } from "@/components/motion";
 import "../login.css";
 import "./verify.css";
 
@@ -31,7 +32,7 @@ function VerifyNumberInner() {
 
   return (
     <div className="verify-page">
-      <div className="verify-inner">
+      <Reveal className="verify-inner">
         {/* Progress bar */}
         <div className="progress-bar-track">
           <div className="progress-bar-done"      style={{ flex: currentStep - 1 }} />
@@ -90,7 +91,7 @@ function VerifyNumberInner() {
           <div className="bottom-divider" />
           <button className="btn-back" onClick={() => router.back()}>Back</button>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

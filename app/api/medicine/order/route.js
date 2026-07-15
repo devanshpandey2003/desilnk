@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server";
+import sql from "../../../../lib/db";
 
 const MERADOC_BASE = "https://apidev.meradoc.com";
 const ORIGIN_TOKEN = "ea905fcbecccb788fdde2651cf4ff7d1";
 const X_API_ID     = "PVMD-01";
 const X_API_TOKEN  = "aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu";
 
+// Returns a token, or null if MeraDoc is unreachable/down (never throws)
 async function getAccessToken() {
-  const res = await fetch(`${MERADOC_BASE}/user/api/v1/sso/tenant`, {
-    method: "POST",
-    headers: {
-      "x-api-id":    X_API_ID,
-      "x-api-token": X_API_TOKEN,
-      "originToken": ORIGIN_TOKEN,
-    },
-  });
-  const json = await res.json();
-  return json?.data?.token;
+  try {
+    const res = await fetch(`${MERADOC_BASE}/user/api/v1/sso/tenant`, {
+      method: "POST",
+      headers: {
+        "x-api-id":    X_API_ID,
+        "x-api-token": X_API_TOKEN,
+        "originToken": ORIGIN_TOKEN,
+      },
+    });
+    const json = await res.json().catch(() => ({}));
+    return json?.data?.token || null;
+  } catch {
+    return null;
+  }
 }
 
 // POST /api/medicine/order
@@ -25,19 +31,42 @@ export async function POST(request) {
     const { addressId, items, prescriptions } = await request.json();
 
     if (!addressId || !items?.length) {
-      return NextResponse.json({ error: "addressId and items are required" }, { status: 400 });
+      return NextResponse.json({
+        error:   true,
+        source:  "desilink",
+        message: "Missing delivery address or cart items. Please try again.",
+      }, { status: 400 });
     }
 
-    // Get the user's access token — patient is identified from JWT, not patientId field
-    const authHeader = request.headers.get("Authorization");
+    // Use the client's token if present; otherwise generate one server-side.
+    // (The client token expires in 1h — the getAccessToken fallback keeps the
+    // flow working even if the browser token is stale/missing.)
+    let authHeader = request.headers.get("Authorization");
     if (!authHeader) {
-      return NextResponse.json({ error: "Authorization header required" }, { status: 401 });
+      const t = await getAccessToken();
+      if (t) {
+        authHeader = `Bearer ${t}`;
+      } else {
+        // Couldn't authenticate — MeraDoc's auth endpoint is down/unreachable
+        return NextResponse.json({
+          error:   true,
+          source:  "meradoc",
+          message: "MeraDoc authentication is currently unavailable. Please try again later.",
+        }, { status: 503 });
+      }
     }
 
+    // Resolve patientId from our DB (query directly — relative fetch fails in a server route)
     const email     = request.headers.get("x-user-email") || "";
-    const patientId = email
-      ? await fetch(`/api/meradoc/patient?email=${encodeURIComponent(email)}`).then(r => r.json()).then(j => j.patientId).catch(() => "")
-      : "";
+    let patientId   = request.headers.get("x-patient-id") || "";
+    if (!patientId && email) {
+      try {
+        const rows = await sql`SELECT patient_id FROM meradoc_patients WHERE email = ${email} LIMIT 1`;
+        patientId = rows[0]?.patient_id || "";
+      } catch (e) {
+        console.error("[order] patientId lookup failed", e);
+      }
+    }
 
     const hasRx = items.some(i => i.isPrescribed);
 
@@ -46,61 +75,91 @@ export async function POST(request) {
       addressId,
       items: items.map(i => ({
         productId:    String(i.productId),
+        name:         i.name || "",
         quantity:     i.quantity,
         isPrescribed: i.isPrescribed || false,
       })),
       ...(hasRx && prescriptions?.length ? { prescriptions } : {}),
     };
 
-    const meraRes = await fetch(`${MERADOC_BASE}/go/api/v1/pharmacy/orders`, {
+    const postOrder = (auth) => fetch(`${MERADOC_BASE}/go/api/v1/pharmacy/orders`, {
       method: "POST",
       headers: {
-        "Authorization": authHeader,
+        "Authorization": auth,
         "originToken":   ORIGIN_TOKEN,
+        "x-api-id":      X_API_ID,
+        "x-api-token":   X_API_TOKEN,
         "Content-Type":  "application/json",
       },
       body: JSON.stringify(orderBody),
     });
 
-    const meraJson = await meraRes.json();
+    let meraRes, meraJson;
+    try {
+      meraRes  = await postOrder(authHeader);
+      meraJson = await meraRes.json().catch(() => ({}));
 
-    // PharmEasy dev server is currently unreliable — fall back to mock on 502
-    if (meraRes.status === 502 || meraJson?.message === "failed to create vendor order") {
-      const mock = {
-        status: 200,
-        message: "OK",
-        data: {
-          _id:                "6a2fe629848b9acdf0c496ad",
-          id:                 "6a2fe629848b9acdf0c496ad",
-          orderId:            "MDM-1827",
-          partnerOrderId:     "PHARMEASY_ORDER_12345",
-          partnerOrderStatus: "PLACED",
-          orderStatus:        "PENDING",
-          paymentStatus:      "NA",
-          trackingStatus:     "CREATED",
-          source:             "TENANT",
-          price:              orderBody.items.reduce((s, i) => s + 32.29 * i.quantity, 0),
-          deliveryCharges:    0,
-          totalPrice:         orderBody.items.reduce((s, i) => s + 32.29 * i.quantity, 0).toFixed(2),
-          totalDiscount:      "0.00",
-          items:              orderBody.items.map(i => ({
-            productId:   i.productId,
-            itemId:      "059346",
-            name:        i.name || "Medicine",
-            quantity:    i.quantity,
-            isPrescribed: i.isPrescribed,
-            mrp:         32.29,
-          })),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      };
-      return NextResponse.json(mock, { status: 200 });
+      // If the client token was stale (401), regenerate server-side and retry once
+      if (meraRes.status === 401) {
+        const fresh = await getAccessToken();
+        if (fresh) {
+          meraRes  = await postOrder(`Bearer ${fresh}`);
+          meraJson = await meraRes.json().catch(() => ({}));
+        }
+      }
+    } catch (netErr) {
+      // Could not reach MeraDoc at all (server down / network)
+      console.error("[order] MeraDoc unreachable", netErr);
+      return NextResponse.json({
+        error:   true,
+        source:  "meradoc",
+        message: "MeraDoc server is currently unreachable. Please try again later.",
+      }, { status: 503 });
     }
 
-    return NextResponse.json(meraJson, { status: meraRes.status });
+    // ── Success ──────────────────────────────────────────────────────────────
+    if (meraRes.ok && (meraJson?.status === 200 || meraJson?.data?._id || meraJson?.data?.orderId)) {
+      return NextResponse.json(meraJson, { status: 200 });
+    }
+
+    // ── Failure — attribute the blame honestly ───────────────────────────────
+    const msg = (meraJson?.message || "").toLowerCase();
+
+    // External partner (PharmEasy) failed to create the vendor order
+    if (meraRes.status === 502 || msg.includes("vendor") || msg.includes("pharmeasy") || msg.includes("partner")) {
+      return NextResponse.json({
+        error:   true,
+        source:  "external",
+        message: "Our pharmacy partner (PharmEasy) could not process the order right now. Please try again later.",
+        detail:  meraJson?.message || null,
+      }, { status: 502 });
+    }
+
+    // MeraDoc server unavailable (503 / gateway)
+    if (meraRes.status === 503 || meraRes.status === 504) {
+      return NextResponse.json({
+        error:   true,
+        source:  "meradoc",
+        message: "MeraDoc server is temporarily unavailable. Please try again later.",
+        detail:  meraJson?.message || null,
+      }, { status: meraRes.status });
+    }
+
+    // Any other MeraDoc response (validation / auth / business rules) — surface its message
+    return NextResponse.json({
+      error:   true,
+      source:  "meradoc",
+      message: meraJson?.message || "MeraDoc rejected the order.",
+      detail:  meraJson?.message || null,
+    }, { status: meraRes.status || 400 });
+
   } catch (err) {
+    // Anything thrown inside our own route = Desilink server error
     console.error("[POST /api/medicine/order]", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({
+      error:   true,
+      source:  "desilink",
+      message: "Desilink server error while placing the order. Please try again.",
+    }, { status: 500 });
   }
 }

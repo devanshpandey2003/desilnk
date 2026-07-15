@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { Stagger, StaggerItem, AnimatedNumber } from "@/components/motion";
 import "./medicines.css";
+
+const fmtRupees2 = (n) => `₹${n.toFixed(2)}`;
+const fmtCount = (n) => `${Math.round(n)}`;
 
 function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
@@ -109,39 +113,47 @@ export default function MedicinesPage() {
 
       {/* Action cards */}
       {!searched && (
-        <div className="med-features">
-          <button className="med-feature-card med-feature-btn" onClick={() => router.push("/consultancy/medicines/prescription")}>
-            <div className="med-feature-icon" style={{ background: "#dbeafe" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a4fd4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            </div>
-            <h4>Upload</h4>
-            <p>Prescription</p>
-          </button>
+        <Stagger className="med-features">
+          <StaggerItem className="med-feature-item">
+            <button className="med-feature-card med-feature-btn" onClick={() => router.push("/consultancy/medicines/prescription")}>
+              <div className="med-feature-icon" style={{ background: "#dbeafe" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a4fd4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <h4>Upload</h4>
+              <p>Prescription</p>
+            </button>
+          </StaggerItem>
 
-          <a className="med-feature-card med-feature-btn" href="tel:+918069991444">
-            <div className="med-feature-icon" style={{ background: "#ffedd5" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.35 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            </div>
-            <h4>Call to</h4>
-            <p>Order</p>
-          </a>
+          <StaggerItem className="med-feature-item">
+            <a className="med-feature-card med-feature-btn" href="tel:+918069991444">
+              <div className="med-feature-icon" style={{ background: "#ffedd5" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.35 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <h4>Call to</h4>
+              <p>Order</p>
+            </a>
+          </StaggerItem>
 
-          <button className="med-feature-card med-feature-btn" onClick={() => router.push("/consultancy/concerns")}>
-            <div className="med-feature-icon" style={{ background: "#dcfce7" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            </div>
-            <h4>Consult</h4>
-            <p>Doctor</p>
-          </button>
+          <StaggerItem className="med-feature-item">
+            <button className="med-feature-card med-feature-btn" onClick={() => router.push("/consultancy/concerns")}>
+              <div className="med-feature-icon" style={{ background: "#dcfce7" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              <h4>Consult</h4>
+              <p>Doctor</p>
+            </button>
+          </StaggerItem>
 
-          <div className="med-feature-card">
-            <div className="med-feature-icon" style={{ background: "#ede9fe" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <StaggerItem className="med-feature-item">
+            <div className="med-feature-card">
+              <div className="med-feature-icon" style={{ background: "#ede9fe" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <h4>10 mins</h4>
+              <p>Delivery</p>
             </div>
-            <h4>10 mins</h4>
-            <p>Delivery</p>
-          </div>
-        </div>
+          </StaggerItem>
+        </Stagger>
       )}
 
       {/* Results + Cart */}
@@ -150,7 +162,19 @@ export default function MedicinesPage() {
           {/* Results */}
           <div className="med-results-section">
             {loading ? (
-              <div className="med-spinner" />
+              <div className="med-results-list">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="med-card">
+                    <div className="skeleton med-skeleton-img" />
+                    <div className="med-card-body">
+                      <div className="skeleton skeleton-text" style={{ width: "70%", marginBottom: "0.4rem" }} />
+                      <div className="skeleton skeleton-text" style={{ width: "40%", marginBottom: "0.4rem" }} />
+                      <div className="skeleton skeleton-text" style={{ width: "55%", marginBottom: "0.6rem" }} />
+                      <div className="skeleton skeleton-text" style={{ width: "30%" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : results.length === 0 ? (
               <div className="med-empty">
                 <div className="med-empty-icon">💊</div>
@@ -222,7 +246,7 @@ export default function MedicinesPage() {
           <div className="med-cart-panel">
             <h3>
               🛒 My Cart
-              {cartCount > 0 && <span className="med-cart-count">{cartCount}</span>}
+              {cartCount > 0 && <span className="med-cart-count"><AnimatedNumber value={cartCount} format={fmtCount} /></span>}
             </h3>
             {cart.length === 0 ? (
               <p className="med-cart-empty">Your cart is empty.<br/>Add medicines to get started.</p>
@@ -248,7 +272,7 @@ export default function MedicinesPage() {
                 <hr className="med-cart-divider" />
                 <div className="med-cart-total">
                   <span>Total</span>
-                  <span>₹{cartTotal.toFixed(2)}</span>
+                  <span><AnimatedNumber value={cartTotal} format={fmtRupees2} /></span>
                 </div>
                 {hasRx && (
                   <p className="med-cart-rx-notice">
@@ -267,7 +291,7 @@ export default function MedicinesPage() {
       {/* Mobile floating cart button */}
       {cartCount > 0 && (
         <button className="med-cart-fab" onClick={handleCheckout}>
-          🛒 {cartCount} item{cartCount !== 1 ? "s" : ""} · ₹{cartTotal.toFixed(2)} → Checkout
+          🛒 <AnimatedNumber value={cartCount} format={fmtCount} /> item{cartCount !== 1 ? "s" : ""} · <AnimatedNumber value={cartTotal} format={fmtRupees2} /> → Checkout
         </button>
       )}
     </div>

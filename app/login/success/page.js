@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Reveal } from "@/components/motion";
 import "../login.css"; // Reuse progress bar and global styles
 import "./success.css";
 
@@ -20,7 +21,7 @@ function SuccessInner() {
 
   return (
     <div className="success-page">
-      <div className="success-inner">
+      <Reveal className="success-inner">
         {/* ── Progress bar (reuses login.css classes) ── */}
         <div className="progress-bar-track" style={{ height: "8px" }}>
           <div className="progress-bar-done" style={{ flex: currentStep }} />
@@ -59,7 +60,7 @@ function SuccessInner() {
 
           <div style={{ height: "24px" }} />
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserService } from "../../services/user.service";
 import { getPatientId } from "../../lib/getPatientId";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import "./dashboard.css";
 
 // SVG Icons
@@ -145,9 +146,11 @@ export default function Dashboard() {
         {/* Content Area */}
         <div className="dashboard-content">
           {/* Welcome Banner */}
-          <section className="welcome-banner animate-fade-in">
-            <h2>Welcome back, {userName}!</h2>
-            <p>Here&apos;s a quick overview of your active services and what&apos;s coming next to make managing life back home easier.</p>
+          <section className="welcome-banner">
+            <Reveal>
+              <h2>Welcome back, {userName}!</h2>
+              <p>Here&apos;s a quick overview of your active services and what&apos;s coming next to make managing life back home easier.</p>
+            </Reveal>
           </section>
 
           {/* Services Section */}
@@ -156,10 +159,10 @@ export default function Dashboard() {
               <h3>Our Services</h3>
             </div>
 
-            <div className="services-grid">
-              
+            <Stagger className="services-grid">
+
               {/* Card 1: Doctor Consultancy (Active) */}
-              <div className="service-card">
+              <StaggerItem className="service-card">
                 <div className="service-card-header">
                   <div className="service-icon-box">
                     {Icons.medical}
@@ -178,10 +181,10 @@ export default function Dashboard() {
                     {!meradocLoading && Icons.external}
                   </button>
                 </div>
-              </div>
+              </StaggerItem>
 
               {/* Card 2: Finance Services (Coming Soon) */}
-              <div className="service-card coming-soon">
+              <StaggerItem className="service-card coming-soon">
                 <div className="service-card-header">
                   <div className="service-icon-box">
                     {Icons.finance}
@@ -195,10 +198,10 @@ export default function Dashboard() {
                     Launching soon
                   </button>
                 </div>
-              </div>
+              </StaggerItem>
 
               {/* Card 3: Property Management (Coming Soon) */}
-              <div className="service-card coming-soon">
+              <StaggerItem className="service-card coming-soon">
                 <div className="service-card-header">
                   <div className="service-icon-box">
                     {Icons.property}
@@ -212,9 +215,9 @@ export default function Dashboard() {
                     Launching soon
                   </button>
                 </div>
-              </div>
+              </StaggerItem>
 
-            </div>
+            </Stagger>
           </section>
         </div>
       </main>

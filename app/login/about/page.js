@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Reveal } from "@/components/motion";
 import "../login.css"; // Reuse progress bar and modal styles
 import "./about.css";
 
@@ -88,7 +89,7 @@ export default function AboutYourselfPage() {
 
   return (
     <div className="about-page">
-      <div className="about-inner">
+      <Reveal className="about-inner">
         {/* ── Progress bar ── */}
         <div className="progress-bar-track">
           <div className="progress-bar-done" style={{ flex: currentStep - 1 }} />
@@ -149,7 +150,7 @@ export default function AboutYourselfPage() {
             Back
           </button>
         </div>
-      </div>
+      </Reveal>
 
       {/* ── Country picker modal (reusing login.css) ── */}
       {pickerOpen && (
