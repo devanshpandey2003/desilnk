@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DiagnosticService } from "../../../../services/diagnostic.service";
 import { UserService } from "../../../../services/user.service";
@@ -40,7 +40,7 @@ function ServiceCard({ icon, label, available, message }) {
   const ok = available === true;
   const na = available === false;
   return (
-    <div style={{
+    <div className="lt-service-card" style={{
       display: "flex", alignItems: "flex-start", gap: "0.75rem",
       padding: "0.85rem 1rem", borderRadius: 10, marginBottom: "0.6rem",
       background: ok ? "#f0fdf4" : na ? "#fef2f2" : "#f9fafb",
@@ -58,6 +58,14 @@ function ServiceCard({ icon, label, available, message }) {
 }
 
 export default function LabTestsAddressPage() {
+  return (
+    <Suspense fallback={null}>
+      <LabTestsAddressContent />
+    </Suspense>
+  );
+}
+
+function LabTestsAddressContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const forMedicines = searchParams.get("for") === "medicines";

@@ -19,9 +19,12 @@
   border: 2px dashed #d1d5db; border-radius: 14px;
   background: #fff; padding: 2.5rem 1.5rem;
   text-align: center; cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    background var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft);
 }
 .rx-dropzone:hover    { border-color: #1a4fd4; background: #f0f4ff; }
+.rx-dropzone:focus-within { border-color: #1a4fd4; box-shadow: var(--focus-ring); }
 .rx-dropzone-active   { border-color: #1a4fd4; background: #e8effe; }
 .rx-drop-icon  { font-size: 2.5rem; margin-bottom: 0.75rem; }
 .rx-drop-label { font-size: 0.95rem; font-weight: 600; color: #1a1f36; margin: 0 0 0.3rem; }
@@ -46,10 +49,11 @@
 .rx-tips li    { font-size: 0.8rem; color: #374151; margin-bottom: 0.3rem; line-height: 1.5; }
 
 .rx-btn-proceed {
-  width: 100%; padding: 0.9rem; border: none; border-radius: 12px;
+  width: 100%; padding: 0.9rem; border: none; border-radius: var(--radius-sm);
   background: linear-gradient(135deg, #1a4fd4, #0f9b4f);
   color: #fff; font-size: 1rem; font-weight: 700;
-  cursor: pointer; margin-top: 1.5rem; transition: opacity 0.2s;
+  cursor: pointer; margin-top: 1.5rem; transition: opacity var(--dur-fast) var(--ease-out-soft), transform var(--dur-fast) var(--ease-out-soft);
 }
 .rx-btn-proceed:hover:not(:disabled) { opacity: 0.88; }
+.rx-btn-proceed:active:not(:disabled) { transform: scale(0.98); }
 .rx-btn-proceed:disabled { opacity: 0.45; cursor: default; }

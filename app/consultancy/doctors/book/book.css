@@ -41,7 +41,9 @@
   justify-content: center;
   font-weight: 700;
   font-size: 0.85rem;
-  transition: all 0.3s ease;
+  transition: background var(--dur-med) var(--ease-out-soft),
+    color var(--dur-med) var(--ease-out-soft),
+    box-shadow var(--dur-med) var(--ease-out-soft);
 }
 
 .step-dot.active {
@@ -82,8 +84,9 @@
   padding: 16px 20px;
   background: linear-gradient(135deg, #eef4fb, #f0f7ff);
   border: 1px solid #d4e4f7;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   margin-bottom: 28px;
+  box-shadow: var(--shadow-sm);
 }
 
 .doc-sum-avatar {
@@ -141,16 +144,22 @@
   align-items: center;
   padding: 12px 18px;
   border: 2px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: white;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    background var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   min-width: 72px;
 }
 
 .date-chip:hover {
   border-color: #1a4fd4;
   background: #f0f4ff;
+}
+
+.date-chip:active {
+  transform: scale(0.96);
 }
 
 .date-chip.selected {
@@ -213,12 +222,19 @@
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    background var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
+  animation: fadeUp var(--dur-med) var(--ease-out-soft) both;
 }
 
 .slot-chip:hover {
   border-color: #1a4fd4;
   background: #f0f4ff;
+}
+
+.slot-chip:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
 .slot-chip.selected {
@@ -271,7 +287,8 @@
   font-size: 0.95rem;
   color: #1e293b;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft);
   font-family: inherit;
 }
 
@@ -304,12 +321,19 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   color: #64748b;
 }
 
 .mode-btn:hover {
   border-color: #94a3b8;
+}
+
+.mode-btn:active {
+  transform: scale(0.97);
 }
 
 .mode-btn.active {
@@ -322,9 +346,9 @@
 .confirm-card {
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   padding: 24px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .confirm-card h3 {
@@ -373,12 +397,18 @@
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-back-step:hover {
   background: #f8fafc;
   border-color: #cbd5e1;
+}
+
+.btn-back-step:active {
+  transform: scale(0.97);
 }
 
 .btn-next-step {
@@ -391,12 +421,17 @@
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: opacity var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-next-step:hover {
   opacity: 0.9;
   transform: translateY(-1px);
+}
+
+.btn-next-step:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .btn-next-step:disabled {
@@ -454,40 +489,37 @@
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-go-home:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
 }
 
-/* Loading */
+.btn-go-home:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Loading — skeleton pills shaped like the slot grid */
 .slots-loading {
-  padding: 32px;
-  text-align: center;
-  color: #64748b;
+  padding: 4px 0;
 }
 
-.slots-loading .spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e8eaf0;
-  border-top-color: #1a4fd4;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 12px;
+.slot-skeleton-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.slot-skeleton-chip {
+  width: 84px;
+  height: 38px;
+  border-radius: 8px;
 }
 
 /* Animations */
 .animate-in {
-  animation: fadeSlideIn 0.35s ease-out;
-}
-
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  animation: fadeUp var(--dur-med) var(--ease-out-soft) both;
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useDoctors, useSlots, useBookConsultation, useGenerateToken } from "../../../hooks/useApi";
 import { getPatientId } from "../../../lib/getPatientId";
 import { AppointmentService } from "../../../services/appointment.service";
+import { Reveal } from "@/components/motion";
 import "../doctors.css";
 
 /* ─── Helpers ─── */
@@ -318,7 +319,7 @@ export default function DoctorDetailPage({ params: paramsPromise }) {
       </div>
 
       {/* Doctor Info Card */}
-      <div className="dd-doctor-card">
+      <Reveal className="dd-doctor-card">
         <div className="dd-dc-avatar">
           {doctor.profileUrl ? (
             <img
@@ -354,7 +355,7 @@ export default function DoctorDetailPage({ params: paramsPromise }) {
           <span className="dd-dc-price-amount">₹{doctor.price}</span>
           <span className="dd-dc-price-label">per consult</span>
         </div>
-      </div>
+      </Reveal>
 
       {/* Step Progress */}
       <div className="dd-steps">
@@ -367,7 +368,7 @@ export default function DoctorDetailPage({ params: paramsPromise }) {
 
       {/* ─── STEP 1: Slot Picker ─── */}
       {step === 1 && (
-        <div className="dd-section">
+        <Reveal delay={0.1} className="dd-section">
           <h3 className="dd-section-title">Select Date & Time</h3>
 
           {/* Date Chips */}
@@ -400,12 +401,12 @@ export default function DoctorDetailPage({ params: paramsPromise }) {
           <button className="dd-btn-primary dd-btn-full" onClick={handleNext} disabled={!selectedSlot}>
             Continue
           </button>
-        </div>
+        </Reveal>
       )}
 
       {/* ─── STEP 2: Patient Details ─── */}
       {step === 2 && (
-        <div className="dd-section">
+        <Reveal className="dd-section">
           <h3 className="dd-section-title">Your Details</h3>
           <div className="dd-form">
             <label>
@@ -436,12 +437,12 @@ export default function DoctorDetailPage({ params: paramsPromise }) {
               Continue
             </button>
           </div>
-        </div>
+        </Reveal>
       )}
 
       {/* ─── STEP 3: Confirmation ─── */}
       {step === 3 && (
-        <div className="dd-section">
+        <Reveal className="dd-section">
           <h3 className="dd-section-title">Confirm Booking</h3>
           <div className="dd-confirmation">
             <div className="dd-confirm-row"><span>Doctor</span><strong>{doctor.name}</strong></div>
@@ -460,7 +461,7 @@ export default function DoctorDetailPage({ params: paramsPromise }) {
               {isBooking ? "Booking..." : "Confirm & Book"}
             </button>
           </div>
-        </div>
+        </Reveal>
       )}
     </div>
   );

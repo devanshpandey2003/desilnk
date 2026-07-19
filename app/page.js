@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 
 export default function Home() {
   return (
@@ -56,66 +57,68 @@ export default function Home() {
 
       {/* ───── What's Coming ───── */}
       <section id="features" className="features">
-        <h2>What&apos;s coming</h2>
-        <p className="features-subtitle">
-          Everything you need to stay connected and in control, from anywhere in the world.
-        </p>
+        <Reveal>
+          <h2>What&apos;s coming</h2>
+          <p className="features-subtitle">
+            Everything you need to stay connected and in control, from anywhere in the world.
+          </p>
+        </Reveal>
 
-        <div className="features-grid">
+        <Stagger className="features-grid">
           {/* Card: Money & bills */}
-          <div className="feature-card">
+          <StaggerItem className="feature-card">
             <div className="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
             </div>
             <h3>Money &amp; bills</h3>
             <p>Track payments, set reminders, and manage recurring bills from anywhere.</p>
-          </div>
+          </StaggerItem>
 
           {/* Card: Property */}
-          <div className="feature-card">
+          <StaggerItem className="feature-card">
             <div className="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             </div>
             <h3>Property</h3>
             <p>Store documents, log maintenance, and get updates on your assets.</p>
-          </div>
+          </StaggerItem>
 
           {/* Card: Family support */}
-          <div className="feature-card">
+          <StaggerItem className="feature-card">
             <div className="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <h3>Family support</h3>
             <p>Coordinate requests and tasks with family members back home.</p>
-          </div>
+          </StaggerItem>
 
           {/* Card: Trusted services */}
-          <div className="feature-card">
+          <StaggerItem className="feature-card">
             <div className="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <h3>Trusted services</h3>
             <p>Access curated, vetted service providers you can rely on.</p>
-          </div>
+          </StaggerItem>
 
           {/* Card: Secure sharing */}
-          <div className="feature-card">
+          <StaggerItem className="feature-card">
             <div className="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
             </div>
             <h3>Secure sharing</h3>
             <p>Control who sees what with granular permission settings.</p>
-          </div>
+          </StaggerItem>
 
           {/* Card: Smart insights */}
-          <div className="feature-card">
+          <StaggerItem className="feature-card">
             <div className="feature-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
             </div>
             <h3>Smart insights</h3>
             <p>Stay informed with timely notifications and activity timelines.</p>
-          </div>
-        </div>
+          </StaggerItem>
+        </Stagger>
       </section>
 
       {/* ───── How It Works ───── */}
@@ -123,28 +126,28 @@ export default function Home() {
         <h2>How it works</h2>
         <p className="how-subtitle">Three simple steps to get started.</p>
 
-        <div className="steps-container">
-          <div className="step">
+        <Stagger className="steps-container">
+          <StaggerItem className="step">
             <div className="step-number">1</div>
             <h3>Join the waitlist</h3>
             <p>Sign up with your email to reserve your spot.</p>
-          </div>
-          <div className="step">
+          </StaggerItem>
+          <StaggerItem className="step">
             <div className="step-number">2</div>
             <h3>Tell us what you need</h3>
             <p>Share your priorities so we can tailor the experience.</p>
-          </div>
-          <div className="step">
+          </StaggerItem>
+          <StaggerItem className="step">
             <div className="step-number">3</div>
             <h3>Get invited to the beta</h3>
             <p>Be among the first to try Desi Link when we launch.</p>
-          </div>
-        </div>
+          </StaggerItem>
+        </Stagger>
       </section>
 
       {/* ───── CTA / Signup ───── */}
       <section id="cta" className="cta-section">
-        <div className="cta-content">
+        <Reveal className="cta-content">
           <h2>Be first in line.</h2>
           <p className="cta-subtitle">We&apos;ll only email when there&apos;s something worth sharing.</p>
 
@@ -182,7 +185,7 @@ export default function Home() {
               No spam
             </div>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* ───── Footer ───── */}

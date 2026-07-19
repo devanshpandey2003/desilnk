@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSlots, useBookConsultation, useGenerateToken } from "../../../../hooks/useApi";
 import { getPatientId } from "../../../../lib/getPatientId";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import "./book.css";
 
 // ─── Helper: generate next N days ───
@@ -248,26 +249,30 @@ function BookingContent() {
   const renderStep1 = () => (
     <div className="animate-in">
       <p className="section-label">Select Date</p>
-      <div className="date-chips">
+      <Stagger className="date-chips">
         {days.map((d) => (
-          <button
-            key={d.dateStr}
-            className={`date-chip ${dateStr === d.dateStr ? "selected" : ""}`}
-            onClick={() => handleDateSelect(d.dateStr)}
-          >
-            <span className="day-name">{d.dayName}</span>
-            <span className="day-num">{d.dayNum}</span>
-            <span className="month">{d.month}</span>
-          </button>
+          <StaggerItem key={d.dateStr}>
+            <button
+              className={`date-chip ${dateStr === d.dateStr ? "selected" : ""}`}
+              onClick={() => handleDateSelect(d.dateStr)}
+            >
+              <span className="day-name">{d.dayName}</span>
+              <span className="day-num">{d.dayNum}</span>
+              <span className="month">{d.month}</span>
+            </button>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
 
       <p className="section-label">Available Slots</p>
       <div className="slots-section">
         {slotsLoading ? (
           <div className="slots-loading">
-            <div className="spinner"></div>
-            Loading available slots...
+            <div className="slot-skeleton-row">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="slot-skeleton-chip skeleton" />
+              ))}
+            </div>
           </div>
         ) : allSlots.length === 0 ? (
           <div className="no-slots">No slots available for this date. Try another day.</div>
@@ -471,14 +476,16 @@ function BookingContent() {
       </div>
 
       {/* Doctor Summary */}
-      <div className="doctor-summary">
-        <div className="doc-sum-avatar">{Icons.user}</div>
-        <div className="doc-sum-info">
-          <h3>{doctorName}</h3>
-          <p>{specialty}</p>
+      <Reveal>
+        <div className="doctor-summary">
+          <div className="doc-sum-avatar">{Icons.user}</div>
+          <div className="doc-sum-info">
+            <h3>{doctorName}</h3>
+            <p>{specialty}</p>
+          </div>
+          <div className="doc-sum-fee">₹{fee}</div>
         </div>
-        <div className="doc-sum-fee">₹{fee}</div>
-      </div>
+      </Reveal>
 
       {/* Step Content */}
       {step === 1 && renderStep1()}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import "../login.css"; // Reuse progress bar and global styles
 import "./services.css";
 
@@ -135,7 +136,7 @@ function ServicesSelectionInner() {
 
   return (
     <div className="services-page">
-      <div className="services-inner">
+      <Reveal className="services-inner">
         {/* ── Progress bar (reuses login.css classes) ── */}
         <div className="progress-bar-track">
           <div className="progress-bar-done" style={{ flex: currentStep - 1 }} />
@@ -158,11 +159,11 @@ function ServicesSelectionInner() {
             Choose the services you&apos;d like to explore first
           </p>
 
-          <div className="services-list">
+          <Stagger className="services-list">
             {AVAILABLE_SERVICES.map((service) => {
               const isSelected = selectedIds.includes(service.id);
               return (
-                <div
+                <StaggerItem
                   key={service.id}
                   className={`service-option ${isSelected ? "selected" : ""}`}
                   onClick={() => toggleSelection(service.id)}
@@ -184,10 +185,10 @@ function ServicesSelectionInner() {
                     <h3 className="service-title">{service.name}</h3>
                     <p className="service-desc">{service.description}</p>
                   </div>
-                </div>
+                </StaggerItem>
               );
             })}
-          </div>
+          </Stagger>
 
           <button
             className="btn-continue"
@@ -207,7 +208,7 @@ function ServicesSelectionInner() {
             Back
           </button>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

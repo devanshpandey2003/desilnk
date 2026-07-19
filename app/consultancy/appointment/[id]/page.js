@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppointmentDetails, useGenerateToken } from "../../../../hooks/useApi";
 import { useState, useEffect } from "react";
+import { Reveal } from "@/components/motion";
 import "./appointment.css";
 
 function formatTime(t) {
@@ -73,9 +74,10 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
   if (!isTokenReady || isLoading) {
     return (
       <div className="apt-page">
-        <div className="apt-loading">
-          <div className="apt-spinner" />
-          <p>Loading appointment details...</p>
+        <div className="apt-loading apt-loading--skeleton">
+          <div className="apt-skeleton-card skeleton" />
+          <div className="apt-skeleton-card apt-skeleton-card--sm skeleton" />
+          <div className="apt-skeleton-card apt-skeleton-card--sm skeleton" />
         </div>
       </div>
     );
@@ -110,6 +112,7 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
 
       <div className="apt-content">
         {/* Status card */}
+        <Reveal>
         <div className="apt-card apt-status-card">
           <div className="apt-status-row">
             <div>
@@ -139,9 +142,11 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
             </div>
           )}
         </div>
+        </Reveal>
 
         {/* Doctor card */}
         {doctor && (
+          <Reveal>
           <div className="apt-card">
             <h3 className="apt-card-title">Doctor</h3>
             <div className="apt-doctor-row">
@@ -161,10 +166,12 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
               </div>
             </div>
           </div>
+          </Reveal>
         )}
 
         {/* Patient card */}
         {patient && (
+          <Reveal>
           <div className="apt-card">
             <h3 className="apt-card-title">Patient</h3>
             <div className="apt-row">
@@ -182,10 +189,12 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
               </div>
             </div>
           </div>
+          </Reveal>
         )}
 
         {/* Join call */}
         {apt.meetLinkUrl && apt.appointmentStatus !== "CANCELLED" && apt.appointmentStatus !== "COMPLETED" && (
+          <Reveal>
           <div className="apt-card apt-join-card">
             <h3 className="apt-card-title">Join Consultation</h3>
             <p className="apt-label" style={{ marginBottom: 12 }}>Your consultation link is ready.</p>
@@ -198,10 +207,12 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
               Join Video / Audio Call
             </a>
           </div>
+          </Reveal>
         )}
 
         {/* Prescriptions from webhook */}
         {prescriptions.length > 0 && (
+          <Reveal>
           <div className="apt-card">
             <h3 className="apt-card-title">Prescriptions</h3>
             <ul className="apt-docs">
@@ -358,10 +369,12 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
               })}
             </ul>
           </div>
+          </Reveal>
         )}
 
         {/* Documents attached to appointment */}
         {apt.documents?.length > 0 && (
+          <Reveal>
           <div className="apt-card">
             <h3 className="apt-card-title">Documents</h3>
             <ul className="apt-docs">
@@ -374,6 +387,7 @@ export default function AppointmentDetailsPage({ params: paramsPromise }) {
               ))}
             </ul>
           </div>
+          </Reveal>
         )}
 
         <Link href="/consultancy" className="apt-btn-secondary">Back to Consultancy</Link>

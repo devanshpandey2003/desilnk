@@ -56,12 +56,12 @@
   width: 100%;
   padding: 14px 48px 14px 16px;
   border: 1px solid #d1d5db;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   font-size: 16px;
   font-family: inherit;
   color: #111;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
   box-sizing: border-box;
 }
 
@@ -70,8 +70,8 @@
 }
 
 .password-input:focus {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+  border-color: var(--blue-start);
+  box-shadow: var(--focus-ring);
 }
 
 .password-toggle {
@@ -104,6 +104,7 @@
   width: 100%;
   text-align: left;
   box-sizing: border-box;
+  animation: bannerIn var(--dur-med) var(--ease-out-soft);
 }
 
 /* Verify button */
@@ -111,20 +112,26 @@
   width: 100%;
   padding: 14px 0;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: #8b5cf6;
   color: #fff;
   font-size: 16px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.25s;
+  transition: transform var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft),
+    background-color var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-verify:hover {
   background: #7c3aed;
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
+}
+
+.btn-verify:active {
+  transform: scale(0.98);
 }
 
 .btn-verify:disabled {

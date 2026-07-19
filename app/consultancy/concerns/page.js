@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useConcerns, useGenerateToken } from "../../../hooks/useApi";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import "../book-consultation/concerns.css";
 import "./concerns-page.css";
 
@@ -173,37 +174,40 @@ export default function ConcernsPage() {
       <p className="concerns-section-title">FIND DOCTORS FOR YOUR HEALTH CONCERN</p>
 
       {/* Concerns Grid */}
-      <div className="concerns-grid">
-        {isLoading ? (
-          Array.from({ length: 9 }).map((_, i) => (
+      {isLoading ? (
+        <div className="concerns-grid">
+          {Array.from({ length: 9 }).map((_, i) => (
             <div key={i} className="concern-card concern-card--skeleton">
-              <div className="skeleton-icon" />
+              <div className="skeleton-icon skeleton" />
               <div className="skeleton-lines">
-                <div className="skeleton-line skeleton-line--title" />
-                <div className="skeleton-line skeleton-line--subtitle" />
+                <div className="skeleton-line skeleton-line--title skeleton" />
+                <div className="skeleton-line skeleton-line--subtitle skeleton" />
               </div>
             </div>
-          ))
-        ) : filtered.length === 0 ? (
-          <p className="concerns-empty">No health concerns found.</p>
-        ) : (
-          filtered.map((concern) => (
-            <button
-              key={concern.id}
-              className="concern-card concern-card--health"
-              onClick={() => handleConcernClick(concern)}
-            >
-              <span className="concern-card-icon">{concern.icon}</span>
-              <div className="concern-card-text">
-                <strong>{concern.name}</strong>
-                {concern.symptoms.length > 0 && (
-                  <span>{concern.symptoms.join(", ")}</span>
-                )}
-              </div>
-            </button>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="concerns-empty">No health concerns found.</p>
+      ) : (
+        <Stagger className="concerns-grid">
+          {filtered.map((concern) => (
+            <StaggerItem key={concern.id}>
+              <button
+                className="concern-card concern-card--health"
+                onClick={() => handleConcernClick(concern)}
+              >
+                <span className="concern-card-icon">{concern.icon}</span>
+                <div className="concern-card-text">
+                  <strong>{concern.name}</strong>
+                  {concern.symptoms.length > 0 && (
+                    <span>{concern.symptoms.join(", ")}</span>
+                  )}
+                </div>
+              </button>
+            </StaggerItem>
+          ))}
+        </Stagger>
+      )}
 
       {/* Call to Book */}
       <button className="concerns-call-btn">
@@ -211,48 +215,50 @@ export default function ConcernsPage() {
       </button>
 
       {/* Why Choose Us */}
-      <section className="concerns-why-us">
-        <h2>Why choose us?</h2>
-        <p className="why-us-sub">
-          Experience healthcare the way it should be - accessible, reliable, and professional
-        </p>
-        <div className="why-us-grid">
-          <div className="why-us-card">
-            <div className="why-us-icon-circle">{Icons.clock}</div>
-            <div className="why-us-content">
-              <h3>24×7 availability of doctors</h3>
-              <p>
-                Our doctors are available round the clock to provide you with
-                immediate medical consultation. Whether it&apos;s day or night,
-                weekday or weekend, expert medical help is just a click away. No
-                more waiting for appointments or rushing to clinics.
-              </p>
-              <ul>
-                <li>{Icons.check} Instant consultation anytime</li>
-                <li>{Icons.check} Quick response in emergencies</li>
-                <li>{Icons.check} No waiting time or long queues</li>
-              </ul>
+      <Reveal>
+        <section className="concerns-why-us">
+          <h2>Why choose us?</h2>
+          <p className="why-us-sub">
+            Experience healthcare the way it should be - accessible, reliable, and professional
+          </p>
+          <div className="why-us-grid">
+            <div className="why-us-card">
+              <div className="why-us-icon-circle">{Icons.clock}</div>
+              <div className="why-us-content">
+                <h3>24×7 availability of doctors</h3>
+                <p>
+                  Our doctors are available round the clock to provide you with
+                  immediate medical consultation. Whether it&apos;s day or night,
+                  weekday or weekend, expert medical help is just a click away. No
+                  more waiting for appointments or rushing to clinics.
+                </p>
+                <ul>
+                  <li>{Icons.check} Instant consultation anytime</li>
+                  <li>{Icons.check} Quick response in emergencies</li>
+                  <li>{Icons.check} No waiting time or long queues</li>
+                </ul>
+              </div>
+            </div>
+            <div className="why-us-card">
+              <div className="why-us-icon-circle">{Icons.shield}</div>
+              <div className="why-us-content">
+                <h3>Trusted network of qualified doctors verified by us</h3>
+                <p>
+                  Every doctor in our network is thoroughly verified and certified
+                  by us. We ensure that you receive care from licensed
+                  professionals with proven expertise. Your health and safety are
+                  our top priorities.
+                </p>
+                <ul>
+                  <li>{Icons.check} 100% verified medical credentials</li>
+                  <li>{Icons.check} Experienced specialists across fields</li>
+                  <li>{Icons.check} Regular quality assessments</li>
+                </ul>
+              </div>
             </div>
           </div>
-          <div className="why-us-card">
-            <div className="why-us-icon-circle">{Icons.shield}</div>
-            <div className="why-us-content">
-              <h3>Trusted network of qualified doctors verified by us</h3>
-              <p>
-                Every doctor in our network is thoroughly verified and certified
-                by us. We ensure that you receive care from licensed
-                professionals with proven expertise. Your health and safety are
-                our top priorities.
-              </p>
-              <ul>
-                <li>{Icons.check} 100% verified medical credentials</li>
-                <li>{Icons.check} Experienced specialists across fields</li>
-                <li>{Icons.check} Regular quality assessments</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </Reveal>
     </div>
   );
 }
