@@ -973,6 +973,115 @@ function LabTestsPanel() {
   );
 }
 
+// ─── Medicine Orders Panel ───────────────────────────────────────────────────
+const MED_STATUS_COLORS = {
+  PENDING:    { bg: "#fef3c7", color: "#92400e" },
+  CONFIRMED:  { bg: "#dbeafe", color: "#1e40af" },
+  PROCESSING: { bg: "#dbeafe", color: "#1e40af" },
+  SHIPPED:    { bg: "#e0e7ff", color: "#3730a3" },
+  DELIVERED:  { bg: "#dcfce7", color: "#166534" },
+  COMPLETED:  { bg: "#dcfce7", color: "#166534" },
+  CANCELLED:  { bg: "#fee2e2", color: "#991b1b" },
+};
+
+function MedicineOrderCard({ entry }) {
+  const order  = entry.order || {};
+  const status = (entry.status || "PENDING").toUpperCase();
+  const badge  = MED_STATUS_COLORS[status] || MED_STATUS_COLORS.PENDING;
+  const items  = Array.isArray(order.items) ? order.items : [];
+  const total  = order.totalPrice || order.price ||
+    items.reduce((s, i) => s + (parseFloat(i.mrp || 0) * (i.quantity || 1)), 0);
+  const date   = order.createdAt || entry.updated_at;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", padding: "1rem", border: "1px solid #eef0f4", borderRadius: "12px", marginBottom: "0.75rem", background: "#fff" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <p style={{ fontWeight: 700, color: "#1a1f36", fontSize: "0.95rem", margin: 0 }}>{entry.order_id}</p>
+          {date && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "2px 0 0" }}>{new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>}
+        </div>
+        <span style={{ background: badge.bg, color: badge.color, padding: "0.25rem 0.6rem", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 700 }}>{status}</span>
+      </div>
+      <div style={{ borderTop: "1px solid #f1f3f7", paddingTop: "0.5rem" }}>
+        {items.length === 0 && <p style={{ fontSize: "0.82rem", color: "#6b7280", margin: 0 }}>No item details.</p>}
+        {items.map((it, idx) => (
+          <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.83rem", color: "#374151", padding: "0.15rem 0" }}>
+            <span>{it.name || "Medicine"} × {it.quantity || 1}</span>
+            {it.mrp != null && <span style={{ color: "#6b7280" }}>₹{(parseFloat(it.mrp) * (it.quantity || 1)).toFixed(2)}</span>}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f3f7", paddingTop: "0.5rem" }}>
+        <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>Total</span>
+        <span style={{ fontWeight: 700, color: "#1a1f36" }}>₹{parseFloat(total || 0).toFixed(2)}</span>
+      </div>
+    </div>
+  );
+}
+
+function MedicineOrdersPanel() {
+  const [orders,     setOrders]     = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [email,      setEmail]      = useState("");
+
+  const fetchOrders = (mail, silent = false) => {
+    if (!silent) setLoading(true); else setRefreshing(true);
+    fetch(`/api/medicine/orders?email=${encodeURIComponent(mail)}`)
+      .then((r) => r.json())
+      .then((json) => setOrders(json.orders || []))
+      .catch(() => { if (!silent) setError("Failed to load medicine orders."); })
+      .finally(() => { setLoading(false); setRefreshing(false); });
+  };
+
+  useEffect(() => {
+    const mail = localStorage.getItem("userEmail") || "";
+    setEmail(mail);
+    if (!mail) { setLoading(false); return; }
+    fetchOrders(mail);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="apt-panel-loading">
+        <div className="apt-spinner-sm" />
+        <p>Loading medicine orders...</p>
+      </div>
+    );
+  }
+
+  if (error) return <p className="lab-error">{error}</p>;
+
+  if (orders.length === 0) {
+    return (
+      <div className="apt-panel-empty">
+        <div className="apt-empty-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>
+          </svg>
+        </div>
+        <h3>No Medicine Orders</h3>
+        <p>Your medicine orders will appear here after you place them.</p>
+        <button onClick={() => fetchOrders(email, true)} disabled={refreshing} style={{ marginTop: "1rem", padding: "0.5rem 1.2rem", borderRadius: "8px", border: "1px solid #1a4fd4", background: "#fff", color: "#1a4fd4", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem" }}>
+          {refreshing ? "Checking..." : "🔄 Refresh"}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="lab-panel">
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.5rem" }}>
+        <button onClick={() => fetchOrders(email, true)} disabled={refreshing} style={{ padding: "0.35rem 0.9rem", borderRadius: "8px", border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "4px" }}>
+          {refreshing ? "Refreshing..." : "🔄 Refresh"}
+        </button>
+      </div>
+      {orders.map((o) => <MedicineOrderCard key={o.order_id} entry={o} />)}
+    </div>
+  );
+}
+
 // ─── Family Members Panel ────────────────────────────────────────────────────
 const RELATIONSHIPS = ["Son", "Daughter", "Spouse", "Father", "Mother", "Brother", "Sister", "Other"];
 const GENDERS = ["Male", "Female", "Others"];
@@ -1457,6 +1566,17 @@ function MyProfilePageInner() {
               </button>
             </li>
             <li>
+              <button
+                className={`menu-link menu-btn ${activeTab === "medicines" ? "active" : ""}`}
+                onClick={() => setActiveTab("medicines")}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>
+                </svg>
+                Medicines
+              </button>
+            </li>
+            <li>
               <button className="menu-link menu-btn">
                 {Icons.records}
                 Medical Records
@@ -1622,6 +1742,14 @@ function MyProfilePageInner() {
             <>
               <div className="section-title">Lab Tests</div>
               <LabTestsPanel />
+            </>
+          )}
+
+          {/* ── Medicines Tab ── */}
+          {activeTab === "medicines" && (
+            <>
+              <div className="section-title">Medicine Orders</div>
+              <MedicineOrdersPanel />
             </>
           )}
 

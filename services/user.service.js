@@ -2,13 +2,16 @@ import { api } from "../lib/api";
 
 export const UserService = {
   generateToken: async () => {
-    const response = await api.post("/user/api/v1/sso/tenant");
-    const token = response.data?.data?.token;
+    // Go through our same-origin proxy — MeraDoc has no CORS headers, so a
+    // direct browser call to /sso/tenant is blocked by the browser.
+    const res = await fetch("/api/token", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    const token = data?.data?.token;
     if (token && typeof window !== "undefined") {
       localStorage.setItem("accessToken", token);
       console.log("Access token generated and saved locally.");
     }
-    return response.data;
+    return data;
   },
 
   registerPatient: async (data) => {

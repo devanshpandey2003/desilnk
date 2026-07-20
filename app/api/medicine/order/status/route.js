@@ -31,7 +31,8 @@ export async function GET(request) {
     const authHeader = request.headers.get("Authorization");
     const token = authHeader ? authHeader.replace("Bearer ", "") : await getAccessToken();
 
-    const meraRes = await fetch(`${MERADOC_BASE}/api/v1/pharmacy/orders/${orderId}`, {
+    // Correct path is /go/api/v1/... — the plain /api/v1/... path 404s.
+    const meraRes = await fetch(`${MERADOC_BASE}/go/api/v1/pharmacy/orders/${orderId}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,

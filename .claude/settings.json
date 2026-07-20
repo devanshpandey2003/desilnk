@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w 'HTTP %{http_code}\\\\n' -X POST https://apidev.meradoc.com/user/api/v1/sso/tenant -H 'x-api-id: PVMD-01' -H 'x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu' -H 'originToken: ea905fcbecccb788fdde2651cf4ff7d1' -H 'Content-Type: application/json' -d '{}')",
+      "Bash(curl -s -D - -o /dev/null -X OPTIONS https://apidev.meradoc.com/user/api/v1/sso/tenant -H 'Origin: http://localhost:3000' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: x-api-id,x-api-token,origintoken,content-type')",
+      "Bash(curl -s -D - -o /dev/null -X POST https://apidev.meradoc.com/user/api/v1/sso/tenant -H 'Origin: http://localhost:3000' -H 'x-api-id: PVMD-01' -H 'x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu' -H 'originToken: ea905fcbecccb788fdde2651cf4ff7d1' -H 'Content-Type: application/json' -d '{}')",
+      "Bash(curl -s -D - -o /dev/null https://apidev.meradoc.com/user/api/v1/doctor/listSpecialities -H 'Origin: http://localhost:3000' -H 'x-api-id: PVMD-01' -H 'x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu' -H 'originToken: ea905fcbecccb788fdde2651cf4ff7d1')",
+      "Bash(curl -s -X POST https://apidev.meradoc.com/user/api/v1/sso/tenant -H 'x-api-id: PVMD-01' -H 'x-api-token: aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu' -H 'originToken: ea905fcbecccb788fdde2651cf4ff7d1' -H 'Content-Type: application/json' -d '{}')",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST \"http://localhost:3000/api/token\")",
+      "Bash(curl -s -X POST \"http://localhost:3000/api/token\")",
+      "Bash(curl -s -o /dev/null -w 'HTTP %{http_code}\\\\n' -X POST -H 'Content-Type: application/json' http://localhost:3000/api/mera/user/api/v1/sso/tenant -d '{}')",
+      "Bash(curl -s -X POST -H 'Content-Type: application/json' http://localhost:3000/api/mera/user/api/v1/sso/tenant -d '{}')"
+    ]
+  }
+}

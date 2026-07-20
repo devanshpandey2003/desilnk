@@ -65,7 +65,8 @@ export async function PUT(request) {
       userId:       patientId,
     };
 
-    const meraRes = await fetch(`${MERADOC_BASE}/user/api/v1/user/address/update/${addressId}`, {
+    // Same as create — userId must be a query param, not just a body field.
+    const meraRes = await fetch(`${MERADOC_BASE}/user/api/v1/user/address/update/${addressId}?userId=${encodeURIComponent(patientId)}`, {
       method:  "PUT",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -116,7 +117,9 @@ export async function POST(request) {
       userId:       patientId,
     };
 
-    const meraRes = await fetch(`${MERADOC_BASE}/user/api/v1/user/address/create`, {
+    // MeraDoc resolves the user from the ?userId query param (a tenant token
+    // carries no patient id), not from the body — without it: "User Id is required".
+    const meraRes = await fetch(`${MERADOC_BASE}/user/api/v1/user/address/create?userId=${encodeURIComponent(patientId)}`, {
       method:  "POST",
       headers: {
         "Authorization": `Bearer ${token}`,

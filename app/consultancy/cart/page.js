@@ -70,6 +70,7 @@ function MedOrderView({ medCart, location, onDone, onBack }) {
             productId:    i.product.productId,
             quantity:     i.qty,
             isPrescribed: i.product.additonalInfo?.isRxRequired || false,
+            name:         i.product.name || i.product.title || "",
           })),
           ...(prescriptions.length ? { prescriptions: prescriptions.map(p => ({
             fileName: p.fileName,
