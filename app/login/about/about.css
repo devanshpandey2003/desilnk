@@ -60,7 +60,7 @@
   font-family: inherit;
   color: #111;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
   background: #fff;
 }
 
@@ -69,8 +69,8 @@
 }
 
 .about-input-box:focus {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+  border-color: var(--blue-start);
+  box-shadow: var(--focus-ring);
 }
 
 /* Country selector dropdown box */
@@ -83,7 +83,7 @@
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
 }
 
 .country-selector-box:hover {

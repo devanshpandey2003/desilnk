@@ -26,13 +26,19 @@
   background: #f1f5f9;
   color: #475569;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: background var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   flex-shrink: 0;
 }
 
 .concerns-back-btn:hover {
   background: #e2e8f0;
   color: #0f172a;
+}
+
+.concerns-back-btn:active {
+  transform: scale(0.94);
 }
 
 .concerns-header-icon {
@@ -69,7 +75,8 @@
   font-size: 0.95rem;
   outline: none;
   color: #334155;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft);
   font-family: inherit;
 }
 
@@ -159,7 +166,9 @@
   border: 1px solid #e8edf2;
   border-radius: 14px;
   cursor: pointer;
-  transition: all 0.25s;
+  transition: transform var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) var(--ease-out-soft);
   text-align: left;
   width: 100%;
 }
@@ -168,6 +177,15 @@
   border-color: #1a4fd4;
   box-shadow: 0 6px 20px rgba(26, 79, 212, 0.1);
   transform: translateY(-2px);
+}
+
+.concern-card:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
+.concern-card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .concern-card-icon {
@@ -209,7 +227,7 @@
   -webkit-box-orient: vertical;
 }
 
-/* Skeleton Loading */
+/* Skeleton Loading — shape wrappers; shimmer comes from the shared .skeleton class */
 .concern-card--skeleton {
   pointer-events: none;
 }
@@ -217,10 +235,8 @@
 .skeleton-icon {
   width: 40px;
   height: 40px;
-  background: #f1f5f9;
   border-radius: 50%;
   flex-shrink: 0;
-  animation: pulse 1.5s ease-in-out infinite;
 }
 
 .skeleton-lines {
@@ -232,9 +248,7 @@
 
 .skeleton-line {
   height: 12px;
-  background: #f1f5f9;
   border-radius: 6px;
-  animation: pulse 1.5s ease-in-out infinite;
 }
 
 .skeleton-line--title {
@@ -243,11 +257,6 @@
 
 .skeleton-line--subtitle {
   width: 90%;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
 }
 
 /* Empty State */
@@ -265,19 +274,25 @@
   background: linear-gradient(135deg, #1456d6 0%, #0e7a45 100%);
   color: white;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: 1rem;
   text-align: center;
   border: none;
   cursor: pointer;
   margin-bottom: 60px;
-  transition: opacity 0.2s;
+  transition: opacity var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   font-family: inherit;
 }
 
 .concerns-call-btn:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.concerns-call-btn:active {
+  transform: translateY(0) scale(0.98);
 }
 
 /* ─── Why Choose Us ─── */
@@ -309,11 +324,12 @@
 .why-us-card {
   background: white;
   border: 1px solid #e8edf2;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   padding: 32px;
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  box-shadow: var(--shadow-sm);
 }
 
 .why-us-icon-circle {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Reveal } from "@/components/motion";
 import "./login.css";
 
 /* ── Country data ── */
@@ -136,7 +137,7 @@ export default function CreateAccountPage() {
 
   return (
     <div className="create-account">
-      <div className="create-account-inner">
+      <Reveal className="create-account-inner">
 
         {/* ── Progress bar (only for register) ── */}
         {mode === "register" && (
@@ -308,7 +309,7 @@ export default function CreateAccountPage() {
 
           <button className="btn-back" onClick={() => router.push("/")}>Back</button>
         </div>
-      </div>
+      </Reveal>
 
       {/* ── Country picker modal ── */}
       {pickerOpen && (

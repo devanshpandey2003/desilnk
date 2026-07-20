@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import "./consultancy.css";
 
 /* ─── Service Cards Data ─── */
@@ -209,7 +210,7 @@ export default function ConsultancyHome() {
     <main className="consultancy-main">
       {/* ═══════════ SECTION 1 — HERO ═══════════ */}
       <section className="hero-section">
-        <div className="hero-left">
+        <Reveal className="hero-left">
           <div className="trust-badge-pill">
             <span className="trust-dot" />
             Trusted by 50,000+ families
@@ -266,51 +267,55 @@ export default function ConsultancyHome() {
               <span className="stat-label">Medicine Delivery</span>
             </div>
           </div>
-        </div>
+        </Reveal>
 
         <div className="hero-right">
-          <div className="service-cards-grid">
+          <Stagger className="service-cards-grid">
             {SERVICES.map((svc) => (
-              <button
-                key={svc.id}
-                className={`service-card ${svc.highlighted ? "service-card--highlighted" : ""}`}
-                onClick={() => svc.href && router.push(svc.href)}
-              >
-                {svc.available && (
-                  <span className="service-available-badge">
-                    <span className="avail-dot" /> Available
+              <StaggerItem key={svc.id}>
+                <button
+                  className={`service-card ${svc.highlighted ? "service-card--highlighted" : ""}`}
+                  onClick={() => svc.href && router.push(svc.href)}
+                >
+                  {svc.available && (
+                    <span className="service-available-badge">
+                      <span className="avail-dot" /> Available
+                    </span>
+                  )}
+                  <span className={`service-card-icon ${svc.highlighted ? "icon--white" : ""}`}>
+                    {svc.icon}
                   </span>
-                )}
-                <span className={`service-card-icon ${svc.highlighted ? "icon--white" : ""}`}>
-                  {svc.icon}
-                </span>
-                <span className="service-card-title">{svc.title}</span>
-                <span className="service-card-sub">{svc.subtitle}</span>
-              </button>
+                  <span className="service-card-title">{svc.title}</span>
+                  <span className="service-card-sub">{svc.subtitle}</span>
+                </button>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </div>
       </section>
 
       {/* ═══════════ SECTION 2 — SPECIALTIES ═══════════ */}
       <section className="specialties-section">
-        <h2 className="section-heading">Browse Doctor by Specialties</h2>
-        <p className="section-subheading">
-          Find the right specialist for your health needs
-        </p>
+        <Reveal>
+          <h2 className="section-heading">Browse Doctor by Specialties</h2>
+          <p className="section-subheading">
+            Find the right specialist for your health needs
+          </p>
+        </Reveal>
 
-        <div className="specialties-row">
+        <Stagger className="specialties-row">
           {SPECIALTIES.map((spec) => (
-            <button
-              key={spec.name}
-              className="spec-chip"
-              onClick={() => router.push(`/doctors?specialty=${encodeURIComponent(spec.name)}`)}
-            >
-              <span className="spec-chip-icon">{spec.icon}</span>
-              <span className="spec-chip-name">{spec.name}</span>
-            </button>
+            <StaggerItem key={spec.name}>
+              <button
+                className="spec-chip"
+                onClick={() => router.push(`/doctors?specialty=${encodeURIComponent(spec.name)}`)}
+              >
+                <span className="spec-chip-icon">{spec.icon}</span>
+                <span className="spec-chip-name">{spec.name}</span>
+              </button>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
 
         <div className="care-guide-banner">
           <div className="care-guide-left">
@@ -330,10 +335,12 @@ export default function ConsultancyHome() {
 
       {/* ═══════════ SECTION 3 — TESTIMONIALS ═══════════ */}
       <section className="testimonials-section">
-        <h2 className="testimonials-heading">What our patients say</h2>
-        <p className="section-subheading">
-          Real experiences from families across India
-        </p>
+        <Reveal>
+          <h2 className="testimonials-heading">What our patients say</h2>
+          <p className="section-subheading">
+            Real experiences from families across India
+          </p>
+        </Reveal>
 
         <div className="testimonial-carousel">
           <div

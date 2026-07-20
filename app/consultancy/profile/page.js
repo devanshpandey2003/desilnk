@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppointmentService } from "../../../services/appointment.service";
 import { useSlots, useRescheduleConsultation, useAddFamilyMember, useRemoveFamilyMember } from "../../../hooks/useApi";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import "./profile.css";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ const Icons = {
   calendar: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>,
   records: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
   pill: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 6l6 6-10 10-6-6 10-10z"></path><line x1="10" y1="10" x2="14" y2="14"></line></svg>,
+  package: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
   map: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>,
   logout: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
   xCircle: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>,
@@ -271,9 +273,8 @@ function MyAppointmentsPanel() {
 
   if (aptLoading) {
     return (
-      <div className="apt-panel-loading">
-        <div className="apt-spinner-sm" />
-        <p>Loading appointment...</p>
+      <div className="pf-skeleton-stack">
+        <div className="skeleton pf-skeleton-card" />
       </div>
     );
   }
@@ -835,7 +836,7 @@ function LabOrderCard({ order, patientId, onCancelSuccess, onRescheduleSuccess }
 
       {/* Cancel confirmation */}
       {showConfirm && !isTerminal && !isPastDate && (
-        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "0.8rem 1rem", marginTop: "0.5rem" }}>
+        <div className="lab-cancel-confirm" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "0.8rem 1rem", marginTop: "0.5rem" }}>
           <p style={{ fontSize: "0.85rem", color: "#7f1d1d", marginBottom: "0.6rem" }}>
             Are you sure you want to cancel order <strong>{displayId}</strong>? This cannot be undone.
           </p>
@@ -917,9 +918,9 @@ function LabTestsPanel() {
 
   if (loading) {
     return (
-      <div className="apt-panel-loading">
-        <div className="apt-spinner-sm" />
-        <p>Loading lab tests...</p>
+      <div className="pf-skeleton-stack">
+        <div className="skeleton pf-skeleton-card" />
+        <div className="skeleton pf-skeleton-card" />
       </div>
     );
   }
@@ -969,115 +970,6 @@ function LabTestsPanel() {
           onRescheduleSuccess={handleRescheduleSuccess}
         />
       ))}
-    </div>
-  );
-}
-
-// ─── Medicine Orders Panel ───────────────────────────────────────────────────
-const MED_STATUS_COLORS = {
-  PENDING:    { bg: "#fef3c7", color: "#92400e" },
-  CONFIRMED:  { bg: "#dbeafe", color: "#1e40af" },
-  PROCESSING: { bg: "#dbeafe", color: "#1e40af" },
-  SHIPPED:    { bg: "#e0e7ff", color: "#3730a3" },
-  DELIVERED:  { bg: "#dcfce7", color: "#166534" },
-  COMPLETED:  { bg: "#dcfce7", color: "#166534" },
-  CANCELLED:  { bg: "#fee2e2", color: "#991b1b" },
-};
-
-function MedicineOrderCard({ entry }) {
-  const order  = entry.order || {};
-  const status = (entry.status || "PENDING").toUpperCase();
-  const badge  = MED_STATUS_COLORS[status] || MED_STATUS_COLORS.PENDING;
-  const items  = Array.isArray(order.items) ? order.items : [];
-  const total  = order.totalPrice || order.price ||
-    items.reduce((s, i) => s + (parseFloat(i.mrp || 0) * (i.quantity || 1)), 0);
-  const date   = order.createdAt || entry.updated_at;
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", padding: "1rem", border: "1px solid #eef0f4", borderRadius: "12px", marginBottom: "0.75rem", background: "#fff" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <p style={{ fontWeight: 700, color: "#1a1f36", fontSize: "0.95rem", margin: 0 }}>{entry.order_id}</p>
-          {date && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "2px 0 0" }}>{new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>}
-        </div>
-        <span style={{ background: badge.bg, color: badge.color, padding: "0.25rem 0.6rem", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 700 }}>{status}</span>
-      </div>
-      <div style={{ borderTop: "1px solid #f1f3f7", paddingTop: "0.5rem" }}>
-        {items.length === 0 && <p style={{ fontSize: "0.82rem", color: "#6b7280", margin: 0 }}>No item details.</p>}
-        {items.map((it, idx) => (
-          <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.83rem", color: "#374151", padding: "0.15rem 0" }}>
-            <span>{it.name || "Medicine"} × {it.quantity || 1}</span>
-            {it.mrp != null && <span style={{ color: "#6b7280" }}>₹{(parseFloat(it.mrp) * (it.quantity || 1)).toFixed(2)}</span>}
-          </div>
-        ))}
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f3f7", paddingTop: "0.5rem" }}>
-        <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>Total</span>
-        <span style={{ fontWeight: 700, color: "#1a1f36" }}>₹{parseFloat(total || 0).toFixed(2)}</span>
-      </div>
-    </div>
-  );
-}
-
-function MedicineOrdersPanel() {
-  const [orders,     setOrders]     = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-  const [email,      setEmail]      = useState("");
-
-  const fetchOrders = (mail, silent = false) => {
-    if (!silent) setLoading(true); else setRefreshing(true);
-    fetch(`/api/medicine/orders?email=${encodeURIComponent(mail)}`)
-      .then((r) => r.json())
-      .then((json) => setOrders(json.orders || []))
-      .catch(() => { if (!silent) setError("Failed to load medicine orders."); })
-      .finally(() => { setLoading(false); setRefreshing(false); });
-  };
-
-  useEffect(() => {
-    const mail = localStorage.getItem("userEmail") || "";
-    setEmail(mail);
-    if (!mail) { setLoading(false); return; }
-    fetchOrders(mail);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="apt-panel-loading">
-        <div className="apt-spinner-sm" />
-        <p>Loading medicine orders...</p>
-      </div>
-    );
-  }
-
-  if (error) return <p className="lab-error">{error}</p>;
-
-  if (orders.length === 0) {
-    return (
-      <div className="apt-panel-empty">
-        <div className="apt-empty-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>
-          </svg>
-        </div>
-        <h3>No Medicine Orders</h3>
-        <p>Your medicine orders will appear here after you place them.</p>
-        <button onClick={() => fetchOrders(email, true)} disabled={refreshing} style={{ marginTop: "1rem", padding: "0.5rem 1.2rem", borderRadius: "8px", border: "1px solid #1a4fd4", background: "#fff", color: "#1a4fd4", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem" }}>
-          {refreshing ? "Checking..." : "🔄 Refresh"}
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="lab-panel">
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.5rem" }}>
-        <button onClick={() => fetchOrders(email, true)} disabled={refreshing} style={{ padding: "0.35rem 0.9rem", borderRadius: "8px", border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "4px" }}>
-          {refreshing ? "Refreshing..." : "🔄 Refresh"}
-        </button>
-      </div>
-      {orders.map((o) => <MedicineOrderCard key={o.order_id} entry={o} />)}
     </div>
   );
 }
@@ -1168,9 +1060,10 @@ function FamilyMembersPanel() {
 
   if (loadingList) {
     return (
-      <div className="apt-panel-loading">
-        <div className="apt-spinner-sm" />
-        <p>Loading family members...</p>
+      <div className="pf-skeleton-stack">
+        <div className="skeleton pf-skeleton-card pf-skeleton-card--sm" />
+        <div className="skeleton pf-skeleton-card pf-skeleton-card--sm" />
+        <div className="skeleton pf-skeleton-card pf-skeleton-card--sm" />
       </div>
     );
   }
@@ -1283,9 +1176,9 @@ function PrescriptionsPanel() {
 
   if (loading) {
     return (
-      <div className="apt-panel-loading">
-        <div className="apt-spinner-sm" />
-        <p>Loading prescriptions...</p>
+      <div className="pf-skeleton-stack">
+        <div className="skeleton pf-skeleton-card" />
+        <div className="skeleton pf-skeleton-card" />
       </div>
     );
   }
@@ -1414,6 +1307,179 @@ function PrescriptionsPanel() {
   );
 }
 
+// ─── Medicine Orders Panel ───────────────────────────────────────────────────
+const MED_STATUS_COLORS = {
+  PENDING:    { bg: "#fef3c7", color: "#92400e",  label: "Pending" },
+  CONFIRMED:  { bg: "#dbeafe", color: "#1e40af",  label: "Confirmed" },
+  PROCESSING: { bg: "#ede9fe", color: "#5b21b6",  label: "Processing" },
+  SHIPPED:    { bg: "#d1fae5", color: "#065f46",  label: "Shipped" },
+  DELIVERED:  { bg: "#f3f4f6", color: "#374151",  label: "Delivered" },
+  CANCELLED:  { bg: "#fee2e2", color: "#991b1b",  label: "Cancelled" },
+  CREATED:    { bg: "#fef3c7", color: "#92400e",  label: "Created" },
+};
+
+function MedicineOrdersPanel() {
+  const [orders, setOrders]     = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError]       = useState("");
+
+  const loadOrders = async (silent = false) => {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
+    setError("");
+    try {
+      const email = localStorage.getItem("userEmail") || "";
+      if (!email) { setOrders([]); return; }
+
+      // DB-backed list: orders are persisted server-side when placed, and the
+      // route resolves best-effort live status (MeraDoc has no list endpoint).
+      const res  = await fetch(`/api/medicine/orders?email=${encodeURIComponent(email)}`);
+      const json = await res.json();
+      const mapped = (json.orders || []).map((o) => ({
+        orderId:         o.order_id,
+        placedAt:        o.order?.createdAt || o.updated_at,
+        orderStatus:     o.status,
+        totalPrice:      o.order?.totalPrice || o.order?.price,
+        deliveryCharges: o.order?.deliveryCharges ?? null,
+        items:           o.order?.items || [],
+        live:            o.order || null,
+      }));
+      setOrders(mapped);
+    } catch (e) {
+      setError("Failed to load medicine orders.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => { loadOrders(); }, []);
+
+  if (loading) {
+    return (
+      <div className="pf-skeleton-stack">
+        <div className="skeleton pf-skeleton-card" />
+        <div className="skeleton pf-skeleton-card" />
+      </div>
+    );
+  }
+
+  const email = typeof window !== "undefined" ? localStorage.getItem("userEmail") || "" : "";
+
+  if (orders.length === 0) {
+    return (
+      <div className="apt-panel-empty">
+        <div className="apt-empty-icon">{Icons.package}</div>
+        <h3>No Medicine Orders</h3>
+        <p>Your medicine orders will appear here after placing an order.</p>
+        <button
+          onClick={() => loadOrders(true)}
+          disabled={refreshing}
+          style={{ marginTop: "1rem", padding: "0.5rem 1.2rem", borderRadius: "8px", border: "1px solid #1a4fd4", background: "#fff", color: "#1a4fd4", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem" }}
+        >
+          {refreshing ? "Checking..." : "🔄 Check for orders"}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="lab-panel">
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.5rem" }}>
+        <button
+          onClick={() => loadOrders(true)}
+          disabled={refreshing}
+          style={{ padding: "0.35rem 0.9rem", borderRadius: "8px", border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "4px" }}
+        >
+          {refreshing ? "Refreshing..." : "🔄 Refresh"}
+        </button>
+      </div>
+
+      {orders.map((rec) => {
+        const live        = rec.live;
+        const orderId     = rec.orderId;
+        const rawStatus   = ((live?.orderStatus || rec.orderStatus || "PENDING")).toUpperCase();
+        const statusStyle = MED_STATUS_COLORS[rawStatus] || MED_STATUS_COLORS.PENDING;
+        const placedDate  = rec.placedAt
+          ? new Date(rec.placedAt).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })
+          : (live?.date || "");
+        const items       = live?.items || rec.items || [];
+        const totalPrice  = live?.totalPrice || rec.totalPrice;
+        const deliveryCharges = live?.deliveryCharges ?? rec.deliveryCharges ?? null;
+        const address     = live?.addressDetails;
+
+        return (
+          <div key={orderId} className="lab-tracker-card" style={{ marginBottom: "1rem" }}>
+            {/* Header row */}
+            <div className="lab-tracker-head">
+              <div>
+                <p className="apt-meta-label">Order ID</p>
+                <p className="apt-meta-value apt-id-text">{orderId}</p>
+              </div>
+              {placedDate && (
+                <div>
+                  <p className="apt-meta-label">Placed On</p>
+                  <p className="apt-meta-value">{placedDate}</p>
+                </div>
+              )}
+              <span
+                className="apt-status-pill"
+                style={{ background: statusStyle.bg, color: statusStyle.color, alignSelf: "flex-start" }}
+              >
+                {statusStyle.label}
+              </span>
+            </div>
+
+            {/* Items list */}
+            {items.length > 0 && (
+              <div style={{ margin: "0.6rem 0", borderTop: "1px solid #f1f5f9", paddingTop: "0.6rem" }}>
+                {items.map((item, idx) => {
+                  const name = item.name || item.title || "";
+                  const qty  = item.quantity || 1;
+                  const price = item.discountedMrp || item.mrp || 0;
+                  return (
+                    <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", padding: "0.3rem 0", fontSize: "0.85rem" }}>
+                      <span style={{ color: "#1a1f36", flex: 1 }}>{name}</span>
+                      <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>× {qty}</span>
+                      {price > 0 && <span style={{ color: "#374151", fontWeight: 600, whiteSpace: "nowrap" }}>₹{(price * qty).toFixed(2)}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Price + delivery row */}
+            {(totalPrice || deliveryCharges != null) && (
+              <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", borderTop: "1px solid #f1f5f9", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
+                {totalPrice && (
+                  <div>
+                    <p className="apt-meta-label">Total</p>
+                    <p className="apt-meta-value" style={{ fontWeight: 700 }}>₹{parseFloat(totalPrice).toFixed(2)}</p>
+                  </div>
+                )}
+                {deliveryCharges != null && (
+                  <div>
+                    <p className="apt-meta-label">Delivery</p>
+                    <p className="apt-meta-value">{deliveryCharges === 0 ? "Free" : `₹${deliveryCharges}`}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Delivery address */}
+            {address?.addressLine1 && (
+              <div style={{ marginTop: "0.5rem", background: "#f8fafc", borderRadius: "8px", padding: "0.5rem 0.75rem", fontSize: "0.82rem", color: "#4b5563" }}>
+                📍 {address.addressLine1}{address.city ? `, ${address.city}` : ""}{address.pincode ? ` — ${address.pincode}` : ""}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Main Profile Page ────────────────────────────────────────────────────────
 function MyProfilePageInner() {
   const router = useRouter();
@@ -1502,11 +1568,7 @@ function MyProfilePageInner() {
   };
 
   if (isLoading) {
-    return (
-      <div className="profile-container" style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <h2>Loading profile...</h2>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   const firstName = formData.firstName || "Guest";
@@ -1514,17 +1576,17 @@ function MyProfilePageInner() {
 
   return (
     <div className="profile-container">
-      <div className="profile-header">
+      <Reveal className="profile-header">
         <h1>My Profile</h1>
         <p>Manage your account settings, saved records, and preferences.</p>
-      </div>
+      </Reveal>
 
       <div className="profile-layout">
 
         {/* ───── Left Sidebar ───── */}
         <aside className="profile-sidebar">
-          <ul className="profile-menu">
-            <li>
+          <Stagger className="profile-menu">
+            <StaggerItem>
               <button
                 className={`menu-link menu-btn ${activeTab === "personal" ? "active" : ""}`}
                 onClick={() => setActiveTab("personal")}
@@ -1532,8 +1594,8 @@ function MyProfilePageInner() {
                 {Icons.user}
                 Personal Information
               </button>
-            </li>
-            <li>
+            </StaggerItem>
+            <StaggerItem>
               <button
                 className={`menu-link menu-btn ${activeTab === "appointments" ? "active" : ""}`}
                 onClick={() => setActiveTab("appointments")}
@@ -1541,8 +1603,8 @@ function MyProfilePageInner() {
                 {Icons.calendar}
                 My Appointments
               </button>
-            </li>
-            <li>
+            </StaggerItem>
+            <StaggerItem>
               <button
                 className={`menu-link menu-btn ${activeTab === "family" ? "active" : ""}`}
                 onClick={() => setActiveTab("family")}
@@ -1553,8 +1615,8 @@ function MyProfilePageInner() {
                 </svg>
                 Family Members
               </button>
-            </li>
-            <li>
+            </StaggerItem>
+            <StaggerItem>
               <button
                 className={`menu-link menu-btn ${activeTab === "labtests" ? "active" : ""}`}
                 onClick={() => setActiveTab("labtests")}
@@ -1564,25 +1626,23 @@ function MyProfilePageInner() {
                 </svg>
                 Lab Tests
               </button>
-            </li>
-            <li>
+            </StaggerItem>
+            <StaggerItem>
               <button
-                className={`menu-link menu-btn ${activeTab === "medicines" ? "active" : ""}`}
-                onClick={() => setActiveTab("medicines")}
+                className={`menu-link menu-btn ${activeTab === "medorders" ? "active" : ""}`}
+                onClick={() => setActiveTab("medorders")}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>
-                </svg>
-                Medicines
+                {Icons.package}
+                Medicine Orders
               </button>
-            </li>
-            <li>
+            </StaggerItem>
+            <StaggerItem>
               <button className="menu-link menu-btn">
                 {Icons.records}
                 Medical Records
               </button>
-            </li>
-            <li>
+            </StaggerItem>
+            <StaggerItem>
               <button
                 className={`menu-link menu-btn ${activeTab === "prescriptions" ? "active" : ""}`}
                 onClick={() => setActiveTab("prescriptions")}
@@ -1590,30 +1650,30 @@ function MyProfilePageInner() {
                 {Icons.pill}
                 Prescriptions
               </button>
-            </li>
-            <li>
+            </StaggerItem>
+            <StaggerItem>
               <Link href="/consultancy/address" className="menu-link">
                 {Icons.map}
                 Saved Addresses
               </Link>
-            </li>
+            </StaggerItem>
 
-            <li className="menu-divider"></li>
+            <StaggerItem className="menu-divider" />
 
-            <li>
+            <StaggerItem>
               <Link href="/dashboard" className="menu-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 Back to Dashboard
               </Link>
-            </li>
+            </StaggerItem>
 
-            <li>
+            <StaggerItem>
               <button className="menu-link menu-btn logout" onClick={handleLogout}>
                 {Icons.logout}
                 Logout
               </button>
-            </li>
-          </ul>
+            </StaggerItem>
+          </Stagger>
         </aside>
 
         {/* ───── Main Details ───── */}
@@ -1745,19 +1805,19 @@ function MyProfilePageInner() {
             </>
           )}
 
-          {/* ── Medicines Tab ── */}
-          {activeTab === "medicines" && (
-            <>
-              <div className="section-title">Medicine Orders</div>
-              <MedicineOrdersPanel />
-            </>
-          )}
-
           {/* ── Family Members Tab ── */}
           {activeTab === "family" && (
             <>
               <div className="section-title">Family Members</div>
               <FamilyMembersPanel />
+            </>
+          )}
+
+          {/* ── Medicine Orders Tab ── */}
+          {activeTab === "medorders" && (
+            <>
+              <div className="section-title">Medicine Orders</div>
+              <MedicineOrdersPanel />
             </>
           )}
 
@@ -1777,9 +1837,33 @@ function MyProfilePageInner() {
   );
 }
 
+// ─── Skeleton shell for the initial profile load / Suspense fallback ────────
+function ProfileSkeleton() {
+  return (
+    <div className="profile-container">
+      <div className="profile-header">
+        <div className="skeleton skeleton-text" style={{ width: "200px", height: "28px", marginBottom: "10px" }} />
+        <div className="skeleton skeleton-text" style={{ width: "340px" }} />
+      </div>
+      <div className="profile-layout">
+        <aside className="profile-sidebar">
+          <div className="pf-skeleton-stack">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="skeleton" style={{ height: "40px", borderRadius: "8px" }} />
+            ))}
+          </div>
+        </aside>
+        <main className="profile-main">
+          <div className="skeleton pf-skeleton-card" />
+        </main>
+      </div>
+    </div>
+  );
+}
+
 export default function MyProfilePage() {
   return (
-    <Suspense fallback={<div className="profile-container" style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}><h2>Loading...</h2></div>}>
+    <Suspense fallback={<ProfileSkeleton />}>
       <MyProfilePageInner />
     </Suspense>
   );

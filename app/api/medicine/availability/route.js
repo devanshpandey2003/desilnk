@@ -6,9 +6,22 @@ const X_API_ID     = "PVMD-01";
 const X_API_TOKEN  = "aZ7tQp3R9mX2bL6vWfH1sE8nYcD4jKu";
 const ORIGIN_TOKEN = "ea905fcbecccb788fdde2651cf4ff7d1";
 
+async function getAccessToken() {
+  const res = await fetch(`${MERADOC_BASE}/user/api/v1/sso/tenant`, {
+    method: "POST",
+    headers: {
+      "x-api-id":    X_API_ID,
+      "x-api-token": X_API_TOKEN,
+      "originToken": ORIGIN_TOKEN,
+    },
+  });
+  const json = await res.json();
+  return json?.data?.token;
+}
+
 // POST /api/medicine/availability
-// Body: { pincode: "440001", ucodes: ["122665", "44140"] }
-// Returns: { [ucode]: true | false, raw: [...] }
+// Body: { pincode: "400001", ucodes: ["059346"] }
+// Returns: { availability: { [ucode]: true | false }, raw: {...} }
 export async function POST(request) {
   try {
     const { pincode, ucodes } = await request.json();
@@ -36,7 +49,7 @@ export async function POST(request) {
 
     const json = await res.json();
 
-    // Normalise to { [ucode]: boolean } so the UI doesn't need to know the raw shape
+    // Real response shape: { data: { items: [{ ucode, availability, name, ... }], errors: [], providers: [] } }
     const availability = {};
     // MeraDoc returns the array under data.items (older shapes used data.list)
     const list = json?.data?.items || json?.data?.list || json?.data || [];

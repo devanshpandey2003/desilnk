@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import "../login.css"; // Reuse progress bar and global styles
 import "./notifications.css";
 
@@ -31,7 +32,7 @@ function NotificationPermissionInner() {
 
   return (
     <div className="notifications-page">
-      <div className="notifications-inner">
+      <Reveal className="notifications-inner">
         {/* ── Progress bar (reuses login.css classes) ── */}
         <div className="progress-bar-track">
           <div className="progress-bar-done" style={{ flex: currentStep - 1 }} />
@@ -67,26 +68,26 @@ function NotificationPermissionInner() {
             home
           </p>
 
-          <div className="features-list">
-            <div className="feature-item">
+          <Stagger className="features-list">
+            <StaggerItem className="feature-item">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
               </svg>
               <span>Document expiry alerts</span>
-            </div>
-            <div className="feature-item">
+            </StaggerItem>
+            <StaggerItem className="feature-item">
                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
               </svg>
               <span>Transaction confirmations</span>
-            </div>
-            <div className="feature-item">
+            </StaggerItem>
+            <StaggerItem className="feature-item">
                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
               </svg>
               <span>Property updates</span>
-            </div>
-          </div>
+            </StaggerItem>
+          </Stagger>
 
           <button
             className="btn-continue"
@@ -108,7 +109,7 @@ function NotificationPermissionInner() {
             Back
           </button>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

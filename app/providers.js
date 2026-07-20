@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { MotionProvider } from "@/components/motion";
 
 export default function Providers({ children }) {
   // Creating a queryClient for each session but rendering it globally correctly
@@ -20,7 +21,9 @@ export default function Providers({ children }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <MotionProvider>
+        {children}
+      </MotionProvider>
     </QueryClientProvider>
   );
 }

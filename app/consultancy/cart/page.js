@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { AnimatedNumber } from "@/components/motion";
 import { DiagnosticService } from "../../../services/diagnostic.service";
 import { UserService } from "../../../services/user.service";
+import "../lab-tests/lab-tests.css";
+
+
+const fmtRupees2 = (n) => `₹${n.toFixed(2)}`;
+const fmtRupeesInt = (n) => `₹${Math.round(n)}`;
+const fmtCount = (n) => `${Math.round(n)}`;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 function ageFromDob(dob) {
@@ -56,18 +63,21 @@ function MedOrderView({ medCart, location, onDone, onBack }) {
       const { addressId } = await addrRes.json();
       if (!addressId) { setError("Delivery address not synced. Please re-save your address."); return; }
 
-      const token = localStorage.getItem("accessToken") || "";
+      const token     = localStorage.getItem("accessToken") || "";
+      const patientId = localStorage.getItem(`meradocPatientId_${email}`) || "";
       const res   = await fetch("/api/medicine/order", {
         method:  "POST",
         headers: {
           "Content-Type":  "application/json",
           "Authorization": `Bearer ${token}`,
           "x-user-email":  email,
+          "x-patient-id":  patientId,
         },
         body: JSON.stringify({
           addressId,
           items: medCart.map(i => ({
             productId:    i.product.productId,
+            name:         i.product.name,
             quantity:     i.qty,
             isPrescribed: i.product.additonalInfo?.isRxRequired || false,
             name:         i.product.name || i.product.title || "",
@@ -80,16 +90,49 @@ function MedOrderView({ medCart, location, onDone, onBack }) {
       });
       const json = await res.json();
 
-      if (json.status === 200 || json.data?._id || json.data?.orderId) {
-        const orderId = json.data?._id || json.data?.orderId || "N/A";
+      if (!json.error && (json.status === 200 || json.data?._id || json.data?.orderId)) {
+        const orderId = json.data?.orderId || json.data?._id || "N/A";
+
+        // Persist order so it's visible in Profile → Medicine Orders
+        if (orderId && orderId !== "N/A") {
+          try {
+            const orderRecord = {
+              orderId,
+              placedAt: Date.now(),
+              totalPrice: json.data?.totalPrice || json.data?.price || null,
+              deliveryCharges: json.data?.deliveryCharges || null,
+              orderStatus: json.data?.orderStatus || "PENDING",
+              items: (json.data?.items || medCart.map((i) => ({
+                name: i.product?.name || "",
+                quantity: i.qty,
+                mrp: i.product?.pricingInfo?.mrp || 0,
+                discountedMrp: i.product?.pricingInfo?.discountedMrp || 0,
+              }))),
+            };
+            const prev = JSON.parse(localStorage.getItem(`medOrders_${email}`) || "[]");
+            if (!prev.some((o) => o.orderId === orderId)) {
+              localStorage.setItem(`medOrders_${email}`, JSON.stringify([orderRecord, ...prev].slice(0, 20)));
+            }
+          } catch (_) {}
+        }
+
         localStorage.removeItem("medCart");
         localStorage.removeItem("medPrescriptions");
         window.dispatchEvent(new Event("lt-nav-update"));
         onDone(orderId);
       } else {
-        setError(json.message || "Order failed. Please try again.");
+        // Honest, source-attributed failure — tell the user who to blame
+        const label = {
+          desilink: "Desilink server error",
+          meradoc:  "MeraDoc server error",
+          external: "Pharmacy partner (PharmEasy) error",
+        }[json.source] || "Order failed";
+        setError(`${label}: ${json.message || "Please try again."}`);
       }
-    } catch { setError("Something went wrong. Please try again."); }
+    } catch {
+      // fetch itself failed → our side couldn't even send the request
+      setError("Desilink server error: could not reach the server. Please try again.");
+    }
     finally { setLoading(false); }
   };
 
@@ -143,13 +186,13 @@ function MedOrderView({ medCart, location, onDone, onBack }) {
           </div>
         ))}
         <div className="lt-bill-divider" />
-        <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span>₹{medTotal.toFixed(2)}</span></div>
+        <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span><AnimatedNumber value={medTotal} format={fmtRupees2} /></span></div>
       </div>
 
       {error && <p className="lt-error" style={{ padding: "0 0 0.5rem" }}>{error}</p>}
 
       <div className="lt-cart-footer">
-        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total">₹{medTotal.toFixed(2)}</p></div>
+        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total"><AnimatedNumber value={medTotal} format={fmtRupees2} /></p></div>
         <button className="lt-proceed-btn" disabled={!canOrder || loading} onClick={handleOrder}>
           {loading ? "Placing Order…" : "Place Order →"}
         </button>
@@ -190,6 +233,12 @@ function MedCartTab({ medCart, setMedCart, location, onMedProceed }) {
   };
   const removeMed = (productId) => {
     const updated = medCart.filter(i => i.product.productId !== productId);
+    setMedCart(updated);
+    localStorage.setItem("medCart", JSON.stringify(updated));
+    window.dispatchEvent(new Event("lt-nav-update"));
+  };
+  const removeUnavailable = () => {
+    const updated = medCart.filter(i => !(i.product.ucode && avail[i.product.ucode] === false));
     setMedCart(updated);
     localStorage.setItem("medCart", JSON.stringify(updated));
     window.dispatchEvent(new Event("lt-nav-update"));
@@ -281,21 +330,25 @@ function MedCartTab({ medCart, setMedCart, location, onMedProceed }) {
       {medCart.length > 0 && (
         <div className="lt-co-card">
           <h4 className="lt-section-label">Bill Summary</h4>
-          <div className="lt-bill-row"><span>Items ({medCart.reduce((s, i) => s + i.qty, 0)})</span><span>₹{medTotal.toFixed(2)}</span></div>
+          <div className="lt-bill-row"><span>Items (<AnimatedNumber value={medCart.reduce((s, i) => s + i.qty, 0)} format={fmtCount} />)</span><span><AnimatedNumber value={medTotal} format={fmtRupees2} /></span></div>
           <div className="lt-bill-row"><span>Delivery</span><span>₹0</span></div>
           <div className="lt-bill-divider" />
-          <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span>₹{medTotal.toFixed(2)}</span></div>
+          <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span><AnimatedNumber value={medTotal} format={fmtRupees2} /></span></div>
         </div>
       )}
 
       <div className="lt-cart-footer">
-        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total">₹{medTotal.toFixed(2)}</p></div>
+        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total"><AnimatedNumber value={medTotal} format={fmtRupees2} /></p></div>
         {!location ? (
           <Link href="/consultancy/lab-tests/address?for=medicines" className="lt-proceed-btn" style={{ textDecoration: "none", textAlign: "center" }}>
             Add Delivery Address
           </Link>
         ) : (
-          <button className="lt-proceed-btn" disabled={medCart.length === 0 || hasUnavailable || availLoading} onClick={onMedProceed}>
+          <button
+            className="lt-proceed-btn"
+            disabled={medCart.length === 0 || availLoading}
+            onClick={hasUnavailable ? removeUnavailable : onMedProceed}
+          >
             {availLoading ? "Checking…" : hasUnavailable ? "Remove unavailable items" : "Proceed to Order"}
           </button>
         )}
@@ -370,11 +423,11 @@ function CartView({ tab, labCart, setLabCart, medCart, setMedCart, location, onP
           {labCart.length > 0 && (
             <div className="lt-co-card">
               <h4 className="lt-section-label">Bill Summary</h4>
-              <div className="lt-bill-row"><span>Cart value</span><span>₹{totalMrp}</span></div>
-              <div className="lt-bill-row"><span>Saving&apos;s on MRP</span><span className="lt-saving">-₹{savings}</span></div>
+              <div className="lt-bill-row"><span>Cart value</span><span><AnimatedNumber value={totalMrp} format={fmtRupeesInt} /></span></div>
+              <div className="lt-bill-row"><span>Saving&apos;s on MRP</span><span className="lt-saving">-<AnimatedNumber value={savings} format={fmtRupeesInt} /></span></div>
               <div className="lt-bill-row"><span>Home Collection Charge</span><span>₹0</span></div>
               <div className="lt-bill-divider" />
-              <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span>₹{totalDisc}</span></div>
+              <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span><AnimatedNumber value={totalDisc} format={fmtRupeesInt} /></span></div>
             </div>
           )}
         </>
@@ -393,7 +446,7 @@ function CartView({ tab, labCart, setLabCart, medCart, setMedCart, location, onP
         <div className="lt-cart-footer">
           <div>
             <p className="lt-cart-footer-label">Total Amount</p>
-            <p className="lt-cart-footer-total">₹{totalDisc}</p>
+            <p className="lt-cart-footer-total"><AnimatedNumber value={totalDisc} format={fmtRupeesInt} /></p>
           </div>
           <button className="lt-proceed-btn" disabled={labCart.length === 0 || !location} onClick={onProceed}>
             Proceed to Book
@@ -489,7 +542,7 @@ function SlotView({ labCart, location, profile, onConfirm, onBack }) {
       </div>
 
       <div className="lt-cart-footer">
-        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total">₹{totalDisc}</p></div>
+        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total"><AnimatedNumber value={totalDisc} format={fmtRupeesInt} /></p></div>
         <button className="lt-proceed-btn" disabled={!date || !chosenSlot} onClick={() => onConfirm({ slotId: String(slotId(chosenSlot)), collectionDate: date, collectionSlotTime: slotLabel(chosenSlot) })}>
           Proceed to Checkout
         </button>
@@ -657,19 +710,19 @@ function CheckoutView({ labCart, location, slotInfo, profile, onDone, onBack }) 
 
       <div className="lt-co-card">
         <h4 className="lt-section-label">Bill Summary</h4>
-        <div className="lt-bill-row"><span>Cart value</span><span>₹{totalMrp}</span></div>
-        <div className="lt-bill-row"><span>Saving&apos;s on MRP</span><span className="lt-saving">-₹{savings}</span></div>
-        <div className="lt-bill-row"><span>Coupon Discount</span><span className={couponDiscount > 0 ? "lt-saving" : ""}>-₹{couponDiscount}</span></div>
+        <div className="lt-bill-row"><span>Cart value</span><span><AnimatedNumber value={totalMrp} format={fmtRupeesInt} /></span></div>
+        <div className="lt-bill-row"><span>Saving&apos;s on MRP</span><span className="lt-saving">-<AnimatedNumber value={savings} format={fmtRupeesInt} /></span></div>
+        <div className="lt-bill-row"><span>Coupon Discount</span><span className={couponDiscount > 0 ? "lt-saving" : ""}>-<AnimatedNumber value={couponDiscount} format={fmtRupeesInt} /></span></div>
         <div className="lt-bill-row"><span>Home Collection Charge</span><span>₹0</span></div>
         <div className="lt-bill-divider" />
-        <div className="lt-bill-row lt-savings-row"><span>Total Savings</span><span>₹{savings + couponDiscount}</span></div>
-        <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span>₹{orderTotal}</span></div>
+        <div className="lt-bill-row lt-savings-row"><span>Total Savings</span><span><AnimatedNumber value={savings + couponDiscount} format={fmtRupeesInt} /></span></div>
+        <div className="lt-bill-row lt-order-total-row"><span>Order Total</span><span><AnimatedNumber value={orderTotal} format={fmtRupeesInt} /></span></div>
       </div>
 
       {error && <p className="lt-error" style={{ padding: "0 0 1rem" }}>{error}</p>}
 
       <div className="lt-cart-footer">
-        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total">₹{orderTotal}</p></div>
+        <div><p className="lt-cart-footer-label">Total Amount</p><p className="lt-cart-footer-total"><AnimatedNumber value={orderTotal} format={fmtRupeesInt} /></p></div>
         <button className="lt-proceed-btn" onClick={handleBook} disabled={booking || !profile?.patientId}>
           {booking ? "Booking…" : "Confirm Booking"}
         </button>
@@ -719,6 +772,14 @@ function SuccessView({ orderId, isPending }) {
 
 // ── Root ──────────────────────────────────────────────────────────────────────
 export default function CartPage() {
+  return (
+    <Suspense fallback={null}>
+      <CartPageContent />
+    </Suspense>
+  );
+}
+
+function CartPageContent() {
   const searchParams = useSearchParams();
   const [tab,      setTab]      = useState(searchParams.get("tab") === "medicines" ? "medicines" : "lab");
   const [view,     setView]     = useState("cart"); // cart | slots | checkout | med-order | success
@@ -786,7 +847,7 @@ export default function CartPage() {
         {medOrderId && medOrderId !== "N/A" && (
           <div className="lt-order-id-box"><span>Order ID</span><strong>{medOrderId}</strong></div>
         )}
-        <button className="lt-btn-submit" onClick={() => window.location.href = "/consultancy/profile"} style={{ marginTop: "1rem" }}>
+        <button className="lt-btn-submit" onClick={() => window.location.href = "/consultancy/profile?tab=medorders"} style={{ marginTop: "1rem" }}>
           Track Order
         </button>
         <button className="lt-btn-submit" onClick={() => window.location.href = "/consultancy/medicines"} style={{ marginTop: "0.5rem", background: "#f1f5f9", color: "#1a1f36" }}>
@@ -802,10 +863,10 @@ export default function CartPage() {
       {view === "cart" && (
         <div className="cart-tabs">
           <button className={`cart-tab ${tab === "medicines" ? "active" : ""}`} onClick={() => setTab("medicines")}>
-            💊 Medicines ({medCount})
+            💊 Medicines (<AnimatedNumber value={medCount} format={fmtCount} />)
           </button>
           <button className={`cart-tab ${tab === "lab" ? "active" : ""}`} onClick={() => setTab("lab")}>
-            🧪 Lab Tests ({labCart.length})
+            🧪 Lab Tests (<AnimatedNumber value={labCart.length} format={fmtCount} />)
           </button>
         </div>
       )}

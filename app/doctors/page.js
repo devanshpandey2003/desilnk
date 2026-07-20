@@ -249,16 +249,7 @@ function DoctorsPageContent() {
         {isLoading ? (
           <>
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="drp-card drp-card--skeleton">
-                <div className="skeleton-row">
-                  <div className="skeleton-avatar" />
-                  <div className="skeleton-info">
-                    <div className="skeleton-line w60" />
-                    <div className="skeleton-line w40" />
-                    <div className="skeleton-line w80" />
-                  </div>
-                </div>
-              </div>
+              <div key={i} className="skeleton" style={{ height: 220, borderRadius: "var(--radius-lg)" }} />
             ))}
           </>
         ) : isError ? (

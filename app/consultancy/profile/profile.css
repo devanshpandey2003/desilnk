@@ -33,9 +33,10 @@
   width: 280px;
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   padding: 16px;
   flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
 }
 
 .profile-menu {
@@ -47,11 +48,8 @@
   gap: 4px;
 }
 
-.profile-menu li {
-  margin: 0;
-}
-
 .menu-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -60,7 +58,32 @@
   color: #475569;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft);
+}
+
+/* Adapted "underline" indicator (Task 8 pattern) for this vertical menu:
+   a left accent bar that grows in on hover/active instead of a horizontal underline. */
+.menu-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  bottom: 50%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--gradient-hero);
+  transition: top var(--dur-med) var(--ease-out-soft), bottom var(--dur-med) var(--ease-out-soft);
+}
+
+.menu-link:hover::before,
+.menu-link.active::before {
+  top: 8px;
+  bottom: 8px;
+}
+
+.menu-link.logout::before {
+  background: #ef4444;
 }
 
 .menu-link svg {
@@ -105,8 +128,9 @@
   flex: 1;
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   padding: 40px;
+  box-shadow: var(--shadow-sm);
 }
 
 .section-title {
@@ -169,21 +193,6 @@
   font-size: 0.95rem;
 }
 
-.btn-photo {
-  font-size: 0.85rem;
-  padding: 6px 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: 50px;
-  background: white;
-  color: #475569;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-photo:hover {
-  background: #f8fafc;
-}
-
 /* Grid Form */
 .info-grid {
   display: grid;
@@ -211,7 +220,9 @@
   font-size: 1rem;
   color: #1a1f36;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    background-color var(--dur-fast) var(--ease-out-soft),
+    box-shadow var(--dur-fast) var(--ease-out-soft);
   background-color: #f8fafc;
 }
 
@@ -242,10 +253,16 @@
   color: #475569;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-cancel:hover {
   background: #f8fafc;
+}
+
+.btn-cancel:active {
+  transform: scale(0.97);
 }
 
 .btn-save {
@@ -257,10 +274,16 @@
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(26, 79, 212, 0.25);
+  transition: opacity var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-save:hover {
   opacity: 0.9;
+}
+
+.btn-save:active {
+  transform: scale(0.97);
 }
 
 @media (max-width: 768px) {
@@ -292,13 +315,21 @@
   gap: 20px;
 }
 
-.apt-panel-loading {
+/* ── Skeleton loading states (shaped like the card stack they replace) ── */
+.pf-skeleton-stack {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 60px 0;
-  color: #5a6178;
+  gap: 16px;
+  padding: 4px 0 12px;
+}
+
+.pf-skeleton-card {
+  border-radius: 14px;
+  height: 140px;
+}
+
+.pf-skeleton-card--sm {
+  height: 84px;
 }
 
 .apt-spinner-sm {
@@ -393,6 +424,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   flex-wrap: wrap;
+  animation: bannerIn var(--dur-med) var(--ease-out-soft) both;
 }
 
 .apt-success-banner svg {
@@ -425,6 +457,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-shadow: var(--shadow-sm);
+  animation: fadeUp var(--dur-med) var(--ease-out-soft) both;
 }
 
 .apt-card-top {
@@ -519,7 +553,9 @@
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   display: inline-flex;
   align-items: center;
 }
@@ -527,6 +563,10 @@
 .btn-view-apt:hover {
   background: #f8fafc;
   border-color: #94a3b8;
+}
+
+.btn-view-apt:active {
+  transform: scale(0.97);
 }
 
 .btn-cancel-apt {
@@ -541,12 +581,18 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-cancel-apt:hover:not(:disabled) {
   background: #fee2e2;
   border-color: #ef4444;
+}
+
+.btn-cancel-apt:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .btn-cancel-apt:disabled {
@@ -580,17 +626,6 @@
   gap: 20px;
 }
 
-.lab-search-form {
-  display: flex;
-  gap: 12px;
-  align-items: flex-end;
-}
-
-.lab-track-btn {
-  white-space: nowrap;
-  padding: 12px 24px;
-}
-
 .lab-error {
   font-size: 0.875rem;
   color: #dc2626;
@@ -608,6 +643,8 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  box-shadow: var(--shadow-sm);
+  animation: fadeUp var(--dur-med) var(--ease-out-soft) both;
 }
 
 .lab-tracker-head {
@@ -707,14 +744,13 @@
   border-radius: 12px;
 }
 
+/* Inline cancel-confirmation block inside a lab order card — conditionally
+   rendered in JSX, so entrance is a plain fadeUp (no grid-template-rows trick). */
+.lab-cancel-confirm {
+  animation: fadeUp var(--dur-med) var(--ease-out-soft) both;
+}
+
 @media (max-width: 600px) {
-  .lab-search-form {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .lab-track-btn {
-    width: 100%;
-  }
   .lab-step-label {
     font-size: 0.65rem;
   }
@@ -744,8 +780,10 @@
   gap: 14px;
   padding: 16px;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: white;
+  box-shadow: var(--shadow-sm);
+  animation: fadeUp var(--dur-med) var(--ease-out-soft) both;
 }
 
 .fm-avatar {
@@ -812,7 +850,9 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   font-family: inherit;
   align-self: flex-start;
 }
@@ -820,6 +860,10 @@
 .fm-add-btn:hover {
   background: rgba(26, 79, 212, 0.1);
   border-color: #1a4fd4;
+}
+
+.fm-add-btn:active {
+  transform: scale(0.97);
 }
 
 .fm-form {
@@ -889,6 +933,8 @@
   flex-direction: column;
   gap: 16px;
   background: white;
+  box-shadow: var(--shadow-sm);
+  animation: fadeUp var(--dur-med) var(--ease-out-soft) both;
 }
 
 .rx-card-head {
@@ -1045,13 +1091,19 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   font-family: inherit;
 }
 
 .btn-reschedule-apt:hover {
   background: #dbeafe;
   border-color: #60a5fa;
+}
+
+.btn-reschedule-apt:active {
+  transform: scale(0.97);
 }
 
 /* ── Reschedule Panel ── */
@@ -1063,7 +1115,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  animation: slideUp 0.2s ease;
+  animation: fadeUp var(--dur-med) var(--ease-out-soft) both;
 }
 
 .reschedule-title {
@@ -1091,7 +1143,9 @@
   border: 1.5px solid #e2e8f0;
   background: white;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   min-width: 64px;
   font-family: inherit;
 }
@@ -1099,6 +1153,10 @@
 .date-chip:hover {
   border-color: #93c5fd;
   background: #eff6ff;
+}
+
+.date-chip:active {
+  transform: scale(0.96);
 }
 
 .date-chip.active {
@@ -1181,7 +1239,10 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    border-color var(--dur-fast) var(--ease-out-soft),
+    color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   font-family: inherit;
 }
 
@@ -1189,6 +1250,10 @@
   border-color: #93c5fd;
   background: #eff6ff;
   color: #1a4fd4;
+}
+
+.slot-chip:active {
+  transform: scale(0.96);
 }
 
 .slot-chip.active {
@@ -1240,28 +1305,18 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  animation: fadeOverlay 0.2s ease;
-}
-
-@keyframes fadeOverlay {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  animation: overlayIn var(--dur-fast) var(--ease-out-soft) both;
 }
 
 .cancel-dialog {
   background: white;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   padding: 40px 36px;
   max-width: 420px;
   width: 100%;
   text-align: center;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-  animation: slideUp 0.25s ease;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  animation: panelIn var(--dur-med) var(--ease-out-soft) both;
 }
 
 .cancel-dialog-icon {
@@ -1310,11 +1365,16 @@
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .btn-dialog-keep:hover:not(:disabled) {
   background: #f8fafc;
+}
+
+.btn-dialog-keep:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .btn-dialog-keep:disabled {
@@ -1331,12 +1391,17 @@
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
 }
 
 .btn-dialog-confirm:hover:not(:disabled) {
   background: #b91c1c;
+}
+
+.btn-dialog-confirm:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .btn-dialog-confirm:disabled {

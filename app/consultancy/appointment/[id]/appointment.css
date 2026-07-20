@@ -31,6 +31,17 @@
   padding: 4px;
   display: flex;
   align-items: center;
+  border-radius: 50%;
+  transition: background var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
+}
+
+.apt-back:hover {
+  background: #f1f5f9;
+}
+
+.apt-back:active {
+  transform: scale(0.94);
 }
 
 .apt-content {
@@ -45,12 +56,34 @@
 /* Cards */
 .apt-card {
   background: #fff;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   padding: 20px;
   border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Loading skeleton — shaped like the card stack */
+.apt-loading--skeleton {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: unset;
+}
+
+.apt-skeleton-card {
+  border-radius: var(--radius-sm);
+  height: 120px;
+}
+
+.apt-skeleton-card--sm {
+  height: 88px;
 }
 
 .apt-card-title {
@@ -160,11 +193,17 @@
   cursor: pointer;
   text-decoration: none;
   text-align: center;
-  transition: opacity 0.2s;
+  transition: opacity var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .apt-btn-primary:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.apt-btn-primary:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .apt-btn-secondary {
@@ -179,11 +218,16 @@
   cursor: pointer;
   text-decoration: none;
   text-align: center;
-  transition: border-color 0.2s;
+  transition: border-color var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .apt-btn-secondary:hover {
   border-color: #9ca3af;
+}
+
+.apt-btn-secondary:active {
+  transform: scale(0.98);
 }
 
 /* Prescription items */
@@ -240,11 +284,17 @@
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
-  transition: opacity 0.2s;
+  transition: opacity var(--dur-fast) var(--ease-out-soft),
+    transform var(--dur-fast) var(--ease-out-soft);
 }
 
 .apt-rx-download:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.apt-rx-download:active {
+  transform: translateY(0) scale(0.97);
 }
 
 /* Sections within a prescription */
@@ -363,17 +413,4 @@
   text-align: center;
   padding: 24px;
   color: #6b7280;
-}
-
-.apt-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #1a4fd4;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }

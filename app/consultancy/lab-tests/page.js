@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { DiagnosticService } from "../../../services/diagnostic.service";
 import { UserService } from "../../../services/user.service";
+import { Stagger, StaggerItem } from "@/components/motion";
 import "./lab-tests.css";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -277,7 +278,20 @@ function MainView({ location, cart, onAddToCart }) {
       </div>
 
       {/* Search results */}
-      {searching && <p className="lt-hint lt-indent">Searching…</p>}
+      {searching && (
+        <div className="lt-result-list">
+          {[0, 1, 2].map((i) => (
+            <div className="lt-result-card lt-skel-row" key={i}>
+              <div className="lt-result-thumb skeleton" />
+              <div className="lt-result-body">
+                <div className="skeleton skeleton-text" style={{ width: "55%", marginBottom: 8 }} />
+                <div className="skeleton skeleton-text" style={{ width: "35%", height: 10, marginBottom: 10 }} />
+                <div className="skeleton skeleton-text" style={{ width: "85%", height: 10 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {!searching && results.length > 0 && (
         <div className="lt-result-list">
           {results.map((test, i) => (
@@ -292,43 +306,43 @@ function MainView({ location, cart, onAddToCart }) {
       {/* Default browse content */}
       {!query.trim() && (
         <>
-          <div className="lt-feat-cards">
-            <div className="lt-feat-card lt-feat-green">
+          <Stagger className="lt-feat-cards">
+            <StaggerItem className="lt-feat-card lt-feat-green">
               <div className="lt-feat-ico lt-feat-ico-green">🏠</div>
               <div><h4>Doorstep sample collection</h4><p>Have MeraDoc&apos;s team call with prices</p></div>
-            </div>
-            <div className="lt-feat-card lt-feat-purple">
+            </StaggerItem>
+            <StaggerItem className="lt-feat-card lt-feat-purple">
               <div className="lt-feat-ico lt-feat-ico-purple">📋</div>
               <div><h4>Digital report within 24 hours</h4><p>Get your reports quickly and securely</p></div>
-            </div>
-            <div className="lt-feat-card lt-feat-blue">
+            </StaggerItem>
+            <StaggerItem className="lt-feat-card lt-feat-blue">
               <div className="lt-feat-ico lt-feat-ico-blue">✅</div>
               <div><h4>100% certified</h4><p>Lab Partners</p></div>
-            </div>
-          </div>
+            </StaggerItem>
+          </Stagger>
 
           <div className="lt-book-section-wrap">
             <h3 className="lt-section-title">Book Your Tests</h3>
-            <div className="lt-book-opts">
-              <div className="lt-book-opt">
+            <Stagger className="lt-book-opts">
+              <StaggerItem className="lt-book-opt">
                 <div className="lt-bo-icon lt-bo-green">📄</div>
                 <h4>Upload Prescription</h4>
                 <p>Have MeraDoc&apos;s team call with prices</p>
                 <button className="lt-get-started">Get Started →</button>
-              </div>
-              <div className="lt-book-opt">
+              </StaggerItem>
+              <StaggerItem className="lt-book-opt">
                 <div className="lt-bo-icon lt-bo-blue">📞</div>
                 <h4>Call to Book Tests</h4>
                 <p>Speak with our team for assistance</p>
                 <a href="tel:18003090101" className="lt-get-started">Get Started →</a>
-              </div>
-              <div className="lt-book-opt">
+              </StaggerItem>
+              <StaggerItem className="lt-book-opt">
                 <div className="lt-bo-icon lt-bo-purple">❓</div>
                 <h4>Not sure which test to take?</h4>
                 <p>Consult a MeraDoc doctor now</p>
                 <button className="lt-get-started">Get Started →</button>
-              </div>
-            </div>
+              </StaggerItem>
+            </Stagger>
           </div>
         </>
       )}
