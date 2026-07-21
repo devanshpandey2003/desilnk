@@ -57,12 +57,13 @@ Next.js Server  ◄── app/api/mera/[...path]/route.js   (generic reverse pro
 MeraDoc API
 ```
 
-### Two proxy entry points (both exist — know the difference)
+### The proxy route
 
 | Route | Used by | Notes |
 |-------|---------|-------|
-| **`app/api/mera/[...path]/route.js`** | `lib/api.js` axios client (`baseURL: "/api/mera"`) — **the active one** | Generic catch-all. Forwards `Authorization` **and** `X-Idempotency-Key` (needed by appointment booking). Every `DoctorService` / `AppointmentService` / `UserService` call flows through here. |
-| `app/api/meradoc-proxy/[...path]/route.js` | (legacy, from the ui-polish branch) | Functionally similar but does **not** forward `X-Idempotency-Key`. Kept for compatibility; `lib/api.js` points at `/api/mera`. |
+| **`app/api/mera/[...path]/route.js`** | `lib/api.js` axios client (`baseURL: "/api/mera"`) | Generic catch-all reverse proxy. Injects `x-api-id` / `x-api-token` / `originToken` server-side and forwards `Authorization` (Bearer) + `X-Idempotency-Key` (needed by appointment booking). Every `DoctorService` / `AppointmentService` / `UserService` call flows through here. |
+
+> **Note on naming:** `app/api/mera/…` (the proxy **route**) and `lib/meradoc-proxy.js` (a **helper library**) are different things that happen to look similar. The route is the HTTP reverse proxy; the lib is a set of server-side auth helpers (`getServerToken`, header builders). A grep for "meradoc-proxy" only hits the *helper*.
 
 There are also **purpose-built server routes** that call MeraDoc directly (server-side, so no CORS) instead of via the generic proxy — used when extra logic is needed (credential injection + DB writes + response reshaping): everything under `app/api/medicine/*`, `app/api/diagnostic/*`, `app/api/meradoc/*`, `app/api/token`, and the webhooks. These use the helpers in `lib/meradoc-proxy.js`.
 
@@ -84,8 +85,7 @@ MeraDoc auth is a **tenant-level JWT** minted from static credentials at `POST /
 
 | File | Role |
 |------|------|
-| `app/api/mera/[...path]/route.js` | **Active** generic reverse proxy for all axios MeraDoc calls |
-| `app/api/meradoc-proxy/[...path]/route.js` | Legacy generic proxy (no idempotency-key forwarding) |
+| `app/api/mera/[...path]/route.js` | Generic reverse proxy for all axios MeraDoc calls |
 | `app/api/token/route.js` | Mints the tenant JWT server-side (`/sso/tenant` is CORS-blocked) |
 | `lib/api.js` | Axios client (`baseURL: /api/mera`); Bearer injection, 401 auto-refresh, 5xx retry |
 | `lib/meradoc-proxy.js` | Server-side helpers: `getServerToken`, `meradocHeaders`, `meradocHeadersWithToken`, `PHARMACY_BASE` |
@@ -268,8 +268,7 @@ All consultancy pages share the layout defined in `app/consultancy/layout.js`, w
 | `app/api/pincode/route.js` | `GET` | `/api/pincode?pincode=` | Pincode → city/state/lat/lon lookup (India Post + Nominatim) |
 | `app/api/pincode/route.js` | `GET` | `/api/pincode?lat=&lon=` | Reverse geocoding: coordinates → address + pincode (Nominatim) |
 | `app/api/token/route.js` | `POST` | `/api/token` | Mints the tenant JWT server-side (proxies the CORS-blocked `/sso/tenant`) |
-| `app/api/mera/[...path]/route.js` | ALL | `/api/mera/*` | **Active generic reverse proxy** — forwards all axios MeraDoc calls, injecting `x-api-id`/`x-api-token`/`originToken` and forwarding `Authorization` + `X-Idempotency-Key` |
-| `app/api/meradoc-proxy/[...path]/route.js` | ALL | `/api/meradoc-proxy/*` | Legacy generic proxy (no idempotency-key forwarding) |
+| `app/api/mera/[...path]/route.js` | ALL | `/api/mera/*` | **Generic reverse proxy** — forwards all axios MeraDoc calls, injecting `x-api-id`/`x-api-token`/`originToken` and forwarding `Authorization` + `X-Idempotency-Key` |
 
 ---
 
