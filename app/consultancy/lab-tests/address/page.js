@@ -10,7 +10,6 @@ async function saveLocation(loc) {
   const email = localStorage.getItem("userEmail") || "";
   if (email) {
     localStorage.setItem(`ltLocation_${email}`, JSON.stringify(loc));
-    localStorage.setItem("ltDeliveryCity", loc.city || "");
 
     await fetch("/api/lab-test-address", {
       method: "POST",

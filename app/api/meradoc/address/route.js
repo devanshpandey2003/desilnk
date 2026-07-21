@@ -49,6 +49,12 @@ export async function PUT(request) {
 
     const s = (v, fallback = "") => (v == null ? fallback : String(v));
 
+    // MeraDoc requires non-empty district (and city). Geocoding (India Post /
+    // Nominatim) can intermittently return an empty city, so fall back through
+    // city → district → state → "N/A" rather than block the address save.
+    const districtVal = location.district || location.city || location.state || "N/A";
+    const cityVal     = location.city || location.district || location.state || "N/A";
+
     const body = {
       name:         s(location.name,         "Patient"),
       mobileNumber: s(location.mobileNumber, ""),
@@ -56,9 +62,9 @@ export async function PUT(request) {
       long:         s(location.long,         "0"),
       addressLine1: s(location.addressLine1, ""),
       addressLine2: s(location.addressLine2 || location.addressLine1, "N/A"),
-      district:     s(location.district || location.city, ""),
+      district:     s(districtVal,           "N/A"),
       pincode:      s(location.pincode,      ""),
-      city:         s(location.city,         ""),
+      city:         s(cityVal,               "N/A"),
       state:        s(location.state,        ""),
       country:      s(location.country,      "India"),
       addressType:  "HOME",
@@ -101,6 +107,12 @@ export async function POST(request) {
 
     const s = (v, fallback = "") => (v == null ? fallback : String(v));
 
+    // MeraDoc requires non-empty district (and city). Geocoding (India Post /
+    // Nominatim) can intermittently return an empty city, so fall back through
+    // city → district → state → "N/A" rather than block the address save.
+    const districtVal = location.district || location.city || location.state || "N/A";
+    const cityVal     = location.city || location.district || location.state || "N/A";
+
     const body = {
       name:         s(location.name,         "Patient"),
       mobileNumber: s(location.mobileNumber, ""),
@@ -108,9 +120,9 @@ export async function POST(request) {
       long:         s(location.long,         "0"),
       addressLine1: s(location.addressLine1, ""),
       addressLine2: s(location.addressLine2 || location.addressLine1, "N/A"),
-      district:     s(location.district || location.city, ""),
+      district:     s(districtVal,           "N/A"),
       pincode:      s(location.pincode,      ""),
-      city:         s(location.city,         ""),
+      city:         s(cityVal,               "N/A"),
       state:        s(location.state,        ""),
       country:      s(location.country,      "India"),
       addressType:  "HOME",

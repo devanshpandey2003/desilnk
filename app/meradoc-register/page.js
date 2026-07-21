@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UserService } from "../../services/user.service";
+import { activateUser } from "../../lib/session";
 import "./meradoc-register.css";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -80,6 +81,7 @@ export default function MeraDocRegisterPage() {
           // Existing user — restore session and skip registration
           localStorage.setItem("userEmail", emailVal);
           if (patientKey) localStorage.setItem(patientKey, checkJson.patientId);
+          await activateUser(emailVal); // isolate + hydrate this user's address
           router.push("/consultancy");
           return;
         }
@@ -108,6 +110,7 @@ export default function MeraDocRegisterPage() {
       if (patientId) {
         localStorage.setItem("userEmail", emailVal);
         localStorage.setItem("userGender", gender);
+        await activateUser(emailVal); // brand-new user → clears any prior user's leaked state
         // Save patientId to DB
         await fetch("/api/meradoc/patient", {
           method: "POST",

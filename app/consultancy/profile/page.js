@@ -1666,13 +1666,6 @@ function MyProfilePageInner() {
                 Back to Dashboard
               </Link>
             </StaggerItem>
-
-            <StaggerItem>
-              <button className="menu-link menu-btn logout" onClick={handleLogout}>
-                {Icons.logout}
-                Logout
-              </button>
-            </StaggerItem>
           </Stagger>
         </aside>
 

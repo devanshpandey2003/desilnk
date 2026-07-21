@@ -16,14 +16,15 @@
 6. [Table: `appointment_status_updates`](#6-table-appointment_status_updates)
 7. [Table: `lab_test_orders`](#7-table-lab_test_orders)
 8. [Table: `user_lt_locations`](#8-table-user_lt_locations)
-9. [Entity Relationship Overview](#9-entity-relationship-overview)
-10. [Notes on Schema Management](#10-notes-on-schema-management)
+9. [Table: `medicine_orders`](#9-table-medicine_orders)
+10. [Entity Relationship Overview](#10-entity-relationship-overview)
+11. [Notes on Schema Management](#11-notes-on-schema-management)
 
 ---
 
 ## 1. Overview
 
-Desilink uses **7 tables** in a single Neon PostgreSQL database. The database stores user profiles, family relationships, MeraDoc external patient IDs, and all health-service records (prescriptions, appointment statuses, lab test orders, saved addresses). External data (real-time appointment details, live lab-test status, doctor info) is fetched on demand from the **MeraDoc API** and is not persisted long-term.
+Desilink uses **8 tables** in a single Neon PostgreSQL database. The database stores user profiles, family relationships, MeraDoc external patient IDs, and all health-service records (prescriptions, appointment statuses, lab test orders, medicine orders, saved addresses). External data (real-time appointment details, live lab-test / medicine status, doctor info) is fetched on demand from the **MeraDoc API** and is not persisted long-term. The DB acts primarily as a **bridge/index**: it maps our `email` to MeraDoc's `patientId` and stores order references so we can list them (MeraDoc has no per-user "list orders" endpoint).
 
 ---
 
@@ -170,9 +171,34 @@ Desilink uses **7 tables** in a single Neon PostgreSQL database. The database st
 - `GET /api/lab-test-address?email=` — Retrieve saved location
 - `POST /api/lab-test-address` — Save or update location (upsert on email conflict)
 
+> **Also the source of truth for per-user address isolation.** On login, `lib/session.js → activateUser()` re-hydrates `localStorage.ltLocation_<email>` from this table, so a user's saved address survives even after localStorage is cleared or on a new device.
+
 ---
 
-## 9. Entity Relationship Overview
+## 9. Table: `medicine_orders`
+
+**Managed by:** `app/api/medicine/order/route.js` (write), `app/api/medicine/orders/route.js` (read)
+**Purpose:** Records every placed medicine order so it can be listed in **Profile → Medicine Orders**. Needed because MeraDoc has **no "list orders" endpoint** and its by-id lookup is unreliable on dev — so the app persists each order at creation time.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | `SERIAL` | `PRIMARY KEY` | Auto-incrementing row ID |
+| `order_id` | `TEXT` | `UNIQUE NOT NULL` | MeraDoc display order id (e.g. `MDM-1871`) |
+| `mongo_id` | `TEXT` | Nullable | MeraDoc MongoDB ObjectId `_id` (used for the live status lookup) |
+| `email` | `TEXT` | Nullable | User's email — used to list a user's orders |
+| `patient_id` | `TEXT` | Nullable | MeraDoc patient id the order was placed for |
+| `raw_data` | `JSONB` | NOT NULL | Full MeraDoc order object (items, totalPrice, status, addressDetails…) |
+| `updated_at` | `TIMESTAMPTZ` | DEFAULT `NOW()` | Last upsert time |
+
+**Operations:**
+- Written on a successful order in `POST /api/medicine/order` (upsert `ON CONFLICT (order_id)`).
+- `GET /api/medicine/orders?email=` — list a user's orders (newest first) + best-effort live status.
+
+> **Status caveat:** like `lab_test_orders`, live status comes from `raw_data->>'orderStatus'` or a live MeraDoc call. On the dev environment the live lookup returns "Order Not Found" and no status webhook exists, so orders stay `PENDING` (see Functionality doc §11.4).
+
+---
+
+## 10. Entity Relationship Overview
 
 ```
 users (email PK)
@@ -184,16 +210,18 @@ users (email PK)
   │         └─── appointment_status_updates (appointment_mongo_id)
   │
   ├─── lab_test_orders (email FK)
+  ├─── medicine_orders (email FK, patient_id)
   └─── user_lt_locations (email FK)
 ```
 
 - `email` is the universal linking key used across all tables.
-- `patient_id` (MeraDoc UUID) links `meradoc_patients` → `family_members` and `prescriptions`.
+- `patient_id` (MeraDoc id) links `meradoc_patients` → `family_members`, `prescriptions`, and `medicine_orders`.
 - `appointment_mongo_id` links `appointment_status_updates` and `prescriptions` to MeraDoc appointment records.
+- `order_id` / `mongo_id` on the order tables reference MeraDoc's own order records (for live status).
 
 ---
 
-## 10. Notes on Schema Management
+## 11. Notes on Schema Management
 
 - **No migration framework** is used. Tables are created with `CREATE TABLE IF NOT EXISTS` in the API and webhook route files themselves (self-bootstrapping).
 - **Optional columns** (`dob`, `blood_group`, `gender` on `users`) are added with `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` on the first PATCH request — they will be absent until then.

@@ -17,7 +17,13 @@ export default function ConsultancyLayout({ children }) {
   useEffect(() => {
     const sync = () => {
       try { const c = JSON.parse(localStorage.getItem("ltCart") || "[]"); setCartCount(c.length); } catch { setCartCount(0); }
-      setDeliveryCity(localStorage.getItem("ltDeliveryCity") || "");
+      // Derive the delivery city from the ACTIVE user's saved location so it can
+      // never leak from a previously logged-in user (no global ltDeliveryCity key).
+      try {
+        const email = localStorage.getItem("userEmail") || "";
+        const loc = email ? JSON.parse(localStorage.getItem(`ltLocation_${email}`) || "null") : null;
+        setDeliveryCity(loc?.city || "");
+      } catch { setDeliveryCity(""); }
     };
     sync();
     window.addEventListener("lt-nav-update", sync);

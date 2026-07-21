@@ -44,6 +44,13 @@ const Icons = {
   ),
   external: (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+  ),
+  logout: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline strokeLinecap="round" strokeLinejoin="round" points="16 17 21 12 16 7" />
+      <line strokeLinecap="round" strokeLinejoin="round" x1="21" y1="12" x2="9" y2="12" />
+    </svg>
   )
 };
 
@@ -65,6 +72,20 @@ export default function Dashboard() {
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleLogout = () => {
+    const email = localStorage.getItem("userEmail") || "";
+    [
+      "accessToken", "originToken", "userEmail", "userPhone", "userName", "userCountry",
+      "ltCart", "ltLocation", "ltDeliveryCity",
+    ].forEach((k) => localStorage.removeItem(k));
+    if (email) {
+      localStorage.removeItem(`meradocPatientId_${email}`);
+      localStorage.removeItem(`meradocAppointmentId_${email}`);
+    }
+    window.dispatchEvent(new Event("lt-nav-update"));
+    router.push("/login");
   };
 
   const [meradocLoading, setMeradocLoading] = useState(false);
@@ -107,10 +128,15 @@ export default function Dashboard() {
 
           <p className="sidebar-section-label">Account</p>
 
-          <Link href="/consultancy/profile" className="nav-item" onClick={() => setSidebarOpen(false)}>
-            {Icons.settings}
-            My Profile
-          </Link>
+          <button
+            type="button"
+            className="nav-item"
+            onClick={handleLogout}
+            style={{ background: "transparent", border: "none", width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            {Icons.logout}
+            Logout
+          </button>
         </nav>
 
         <div className="sidebar-footer">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Reveal } from "@/components/motion";
+import { activateUser } from "@/lib/session";
 import "./login.css";
 
 /* ── Country data ── */
@@ -84,6 +85,7 @@ export default function CreateAccountPage() {
         localStorage.setItem("userPhone",   data.user.phone   || "");
         localStorage.setItem("userName",    data.user.name    || "");
         localStorage.setItem("userCountry", data.user.country || "");
+        await activateUser(trimmedEmail); // isolate + hydrate this user's address
         router.push(`/dashboard?name=${encodeURIComponent(data.user.name || "")}`);
       } else {
         setSigninError("No account found with this email. Please create an account.");
@@ -110,6 +112,7 @@ export default function CreateAccountPage() {
         localStorage.setItem("userPhone",   data.user.phone || fullPhone);
         localStorage.setItem("userName",    data.user.name  || "");
         localStorage.setItem("userCountry", data.user.country || "");
+        await activateUser(trimmedEmail); // isolate + hydrate this user's address
         router.push(`/dashboard?name=${encodeURIComponent(data.user.name || "")}`);
         return;
       }
@@ -118,6 +121,7 @@ export default function CreateAccountPage() {
 
     localStorage.setItem("userEmail", trimmedEmail);
     localStorage.setItem("userPhone", fullPhone);
+    await activateUser(trimmedEmail); // brand-new user → clears any prior user's leaked state
     router.push(`/login/verify?phone=${encodeURIComponent(fullPhone)}`);
   };
 

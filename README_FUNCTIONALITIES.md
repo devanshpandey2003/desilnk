@@ -33,69 +33,66 @@
 
 ## 2. Proxy Server Architecture
 
-> **This is one of the core architectural decisions of the project.**
+> **This is the single most important architectural decision in the project. Read this before touching any MeraDoc integration.**
 
-### The Problem — Inconsistent API Behaviour
+### The Problem — MeraDoc sends NO CORS headers
 
-The **MeraDoc API** (`apidev.meradoc.com`) does send `Access-Control-Allow-Origin` (origin) headers, which means direct browser requests are technically permitted. However, the behaviour is **inconsistent across different endpoints** — some APIs work fine from the browser while others fail unpredictably, causing broken flows across features like doctor booking, medicine search, and lab test lookup.
+The **MeraDoc API** (`apidev.meradoc.com`) returns **zero `Access-Control-*` headers** on every endpoint (verified by inspecting `/user/api/v1/sso/tenant` and `/doctor/listSpecialities`). It is a **server-to-server API**. Any call made **directly from the browser** with the custom `x-api-id` / `x-api-token` headers triggers a CORS preflight (`OPTIONS`) that MeraDoc answers `204` **without** `Access-Control-Allow-Origin` / `-Allow-Headers` — so the browser **silently blocks the request** before it is ever sent. In DevTools this shows as a failed request with the warning *"Provisional headers are shown."*
 
-Rather than patching each failing endpoint individually, a **single server-side proxy** was built to route all MeraDoc communication through the Next.js server — making the integration reliable and uniform across every API call.
+**Consequence:** every browser → MeraDoc call must go through a same-origin server route. Nothing may call `apidev.meradoc.com` directly from client code.
 
-### The Solution — A Custom Server-Side Proxy
+### The Solution — A Same-Origin Reverse Proxy
 
-Rather than asking MeraDoc to fix their CORS headers, a **Next.js API Route Proxy** was built into this application. It sits between the browser and MeraDoc:
+All MeraDoc traffic is routed through Next.js API routes on the app's own origin, which forward server-side (where CORS does not apply) and inject the secret credentials:
 
 ```
-Browser (React)
-    │
-    │  calls   /api/meradoc-proxy/*  (same origin — no CORS issue)
+Browser (React / axios)
+    │  calls  /api/mera/<meradoc-path>   (same origin — no CORS)
     ▼
-Next.js Server  ◄── app/api/meradoc-proxy/route.js
-    │
-    │  forwards request to   https://apidev.meradoc.com/*
-    │  injects: x-api-id, x-api-token, originToken, Authorization
+Next.js Server  ◄── app/api/mera/[...path]/route.js   (generic reverse proxy)
+    │  forwards to  https://apidev.meradoc.com/<meradoc-path>
+    │  injects server-side: x-api-id, x-api-token, originToken
+    │  forwards from client: Authorization (Bearer), X-Idempotency-Key
     ▼
 MeraDoc API
 ```
 
-### What the Proxy Does
+### Two proxy entry points (both exist — know the difference)
 
-1. **Receives** any request from the browser at `/api/meradoc-proxy/{path}`.
-2. **Strips** the `/api/meradoc-proxy` prefix and reconstructs the full MeraDoc URL.
-3. **Injects** the required MeraDoc credentials server-side:
-   - `x-api-id` — static tenant API ID
-   - `x-api-token` — static tenant API token
-   - `originToken` — static origin identity token
-   - `Authorization: Bearer <JWT>` — per-user session token from `localStorage` (passed from browser)
-4. **Forwards** the response back to the browser transparently.
+| Route | Used by | Notes |
+|-------|---------|-------|
+| **`app/api/mera/[...path]/route.js`** | `lib/api.js` axios client (`baseURL: "/api/mera"`) — **the active one** | Generic catch-all. Forwards `Authorization` **and** `X-Idempotency-Key` (needed by appointment booking). Every `DoctorService` / `AppointmentService` / `UserService` call flows through here. |
+| `app/api/meradoc-proxy/[...path]/route.js` | (legacy, from the ui-polish branch) | Functionally similar but does **not** forward `X-Idempotency-Key`. Kept for compatibility; `lib/api.js` points at `/api/mera`. |
 
-### Auto Token Refresh
+There are also **purpose-built server routes** that call MeraDoc directly (server-side, so no CORS) instead of via the generic proxy — used when extra logic is needed (credential injection + DB writes + response reshaping): everything under `app/api/medicine/*`, `app/api/diagnostic/*`, `app/api/meradoc/*`, `app/api/token`, and the webhooks. These use the helpers in `lib/meradoc-proxy.js`.
 
-The `lib/api.js` Axios instance that all service files use includes a **response interceptor** that:
-- Detects a `401 Unauthorized` response (expired session token)
-- Automatically calls `/api/meradoc-proxy/user/api/v1/sso/tenant` to get a fresh JWT
-- Retries the original failed request with the new token — **without the user ever seeing an error**
+### The tenant token (`/api/token`)
 
-It also retries once automatically on `5xx` server errors (1-second delay).
+MeraDoc auth is a **tenant-level JWT** minted from static credentials at `POST /user/api/v1/sso/tenant`. Because that call is also CORS-blocked from the browser, it is proxied by **`app/api/token/route.js`** (which calls `getServerToken()` server-side and returns `{ data: { token } }`). The client stores the JWT in `localStorage.accessToken`.
+
+- Client token generation: `UserService.generateToken()` → `POST /api/token`.
+- Auto-refresh: `lib/api.js` has an axios **response interceptor** that, on `401`, calls `/api/token`, stores the fresh JWT, and retries the original request once. It also retries once on `5xx` (1s delay).
+- The JWT decodes to `{ type: "TENANT", clientId: "PVMD-01", … }` — it identifies the **tenant**, not an individual patient, which is why user-scoped MeraDoc endpoints need `patientId`/`userId` passed explicitly (see §11).
+
+### Why this matters
+
+- ✅ **Works at all** — direct browser calls are physically blocked by CORS; the proxy is mandatory, not optional.
+- ✅ **Security** — `x-api-token` / `originToken` are injected server-side and never shipped in the client bundle.
+- ✅ **Resilience** — auto-refresh on 401 and retry on 5xx keep the UX seamless.
 
 ### Key Files
 
 | File | Role |
 |------|------|
-| `app/api/meradoc-proxy/route.js` | The proxy server entry point — catches all `/*` paths and forwards to MeraDoc |
-| `lib/api.js` | Axios client configured to send all requests through the proxy; handles token refresh |
-| `lib/meradoc-proxy.js` | Shared helper — builds MeraDoc auth headers for use in server-side routes and webhooks |
-
-### Why This Matters
-
-- ✅ **Security** — API credentials (`x-api-id`, `x-api-token`) are never exposed to the browser
-- ✅ **CORS-free** — Browser always talks to its own domain; no browser policy violations  
-- ✅ **Resilience** — Auto-retry on 5xx and auto-refresh on 401 keeps the UX seamless  
-- ✅ **Centralised auth** — All third-party auth is managed in one place on the server, not scattered across frontend code
+| `app/api/mera/[...path]/route.js` | **Active** generic reverse proxy for all axios MeraDoc calls |
+| `app/api/meradoc-proxy/[...path]/route.js` | Legacy generic proxy (no idempotency-key forwarding) |
+| `app/api/token/route.js` | Mints the tenant JWT server-side (`/sso/tenant` is CORS-blocked) |
+| `lib/api.js` | Axios client (`baseURL: /api/mera`); Bearer injection, 401 auto-refresh, 5xx retry |
+| `lib/meradoc-proxy.js` | Server-side helpers: `getServerToken`, `meradocHeaders`, `meradocHeadersWithToken`, `PHARMACY_BASE` |
 
 ---
 
-## 2. Application Pages
+## 3. Application Pages
 
 ### Root & Layout
 
@@ -113,7 +110,12 @@ It also retries once automatically on `5xx` server errors (1-second delay).
 
 | File | Path | Description |
 |------|------|-------------|
-| `app/login/page.js` | `/login` | **Login / Sign-up page** — Google OAuth / phone OTP via MeraDoc SSO; stores `accessToken` and `userEmail` in `localStorage` |
+| `app/login/page.js` | `/login` | **Login / Sign-up** — checks `/api/users` by email; existing user → dashboard, new user → phone + OTP verify. Runs `activateUser()` on success (§11.7). |
+| `app/login/verify/page.js` | `/login/verify` | **OTP verification** step for new registrations |
+| `app/login/services/page.js` | `/login/services` | Onboarding: services overview |
+| `app/login/about/page.js` | `/login/about` | Onboarding: about / info |
+| `app/login/notifications/page.js` | `/login/notifications` | Onboarding: notification opt-in |
+| `app/login/success/page.js` | `/login/success` | Onboarding: success / completion |
 
 ---
 
@@ -132,22 +134,26 @@ All consultancy pages share the layout defined in `app/consultancy/layout.js`, w
 | File | Path | Description |
 |------|------|-------------|
 | `app/consultancy/doctors/page.js` | `/consultancy/doctors` | **Doctor listing** — browse/filter doctors by specialty |
+| `app/consultancy/doctors/[specialty]/page.js` | `/consultancy/doctors/:specialty` | Doctors filtered by a chosen specialty |
+| `app/consultancy/doctors/book/page.js` | `/consultancy/doctors/book` | Slot picking + booking for a selected doctor |
 | `app/consultancy/concerns/page.js` | `/consultancy/concerns` | **Health concerns selector** — pick a concern to filter specialties |
 | `app/consultancy/book-consultation/page.js` | `/consultancy/book-consultation` | **Booking flow** — pick slot, enter patient details, upload documents, confirm booking |
-| `app/consultancy/appointment/page.js` | `/consultancy/appointment` | **Appointment details** — view booked appointment info and status |
+| `app/consultancy/appointment/[id]/page.js` | `/consultancy/appointment/:id` | **Appointment details** — view booked appointment info + live status |
 
 #### Lab Tests (Diagnostics)
 
 | File | Path | Description |
 |------|------|-------------|
 | `app/consultancy/lab-tests/page.js` | `/consultancy/lab-tests` | **Lab test booking** — enter pincode, search tests, pick phlebotomist slots, checkout |
+| `app/consultancy/lab-tests/address/page.js` | `/consultancy/lab-tests/address` | **Delivery address entry** — GPS/manual pincode, runs lab + medicine serviceability, saves the location (used by both lab & medicine flows via `?for=` / `?from=nav`) |
 | `app/consultancy/lab-tests/lab-tests.css` | — | Dedicated CSS for lab-test booking UI |
 
 #### Medicines
 
 | File | Path | Description |
 |------|------|-------------|
-| `app/consultancy/medicines/page.js` | `/consultancy/medicines` | **Medicine search** — search by name/ucode, check pincode availability, add to cart |
+| `app/consultancy/medicines/page.js` | `/consultancy/medicines` | **Medicine search** — search by **name** (not ucode), check pincode availability, add to cart |
+| `app/consultancy/medicines/prescription/page.js` | `/consultancy/medicines/prescription` | **Prescription upload** — for Rx-required medicines before checkout |
 | `app/consultancy/cart/page.js` | `/consultancy/cart` | **Medicine cart & checkout** — view cart items, enter delivery address, place order, save order ID |
 
 #### User Profile
@@ -174,6 +180,7 @@ All consultancy pages share the layout defined in `app/consultancy/layout.js`, w
 | File | Path | Description |
 |------|------|-------------|
 | `app/doctors/page.js` | `/doctors` | **Public doctor directory** — browsable without login |
+| `app/doctors/[doctorId]/page.js` | `/doctors/:doctorId` | Public doctor profile / detail page |
 
 ---
 
@@ -207,13 +214,15 @@ All consultancy pages share the layout defined in `app/consultancy/layout.js`, w
 
 ---
 
-### Medicine
+### Medicine  (provider: PharmEasy = `PEMD-01`, via MeraDoc)
 
 | Route File | Method | Endpoint | Description |
 |------------|--------|----------|-------------|
-| `app/api/medicine/search/route.js` | `GET` | `/api/medicine/search?q=&pincode=` | Search medicines by keyword via MeraDoc drug API |
-| `app/api/medicine/availability/route.js` | `POST` | `/api/medicine/availability` | Check availability of medicine ucodes at a pincode |
-| `app/api/medicine/order/route.js` | `POST` | `/api/medicine/order` | Place a medicine order (cart checkout) via PharmEasy/MeraDoc |
+| `app/api/medicine/search/route.js` | `GET` | `/api/medicine/search?search=&pincode=&page=&size=` | Name/keyword search via MeraDoc drug API. **Text search only — a `ucode` as the term does NOT match** (returns unrelated products). Results include `productId`, `ucode`, `name`, `pricingInfo`, `fulfilability`. |
+| `app/api/medicine/availability/route.js` | `POST` | `/api/medicine/availability` | Body `{ pincode, ucodes[] }`. Requires a Bearer token (401 without). Returns `{ availability: { [ucode]: bool }, providerUnavailable? }`. When the PharmEasy provider can't verify a ucode it is treated as **orderable** (not out-of-stock) and flagged — see §11. |
+| `app/api/medicine/order/route.js` | `POST` | `/api/medicine/order` | Place an order. Resolves `patientId` (body → `x-patient-id` header → DB), forwards to `/go/api/v1/pharmacy/orders`, retries once on 401, returns **source-attributed** errors (`source: desilink \| meradoc \| external`), and **persists** the order into `medicine_orders`. See the order contract in §11. |
+| `app/api/medicine/orders/route.js` | `GET` | `/api/medicine/orders?email=` | Lists a user's medicine orders from `medicine_orders` (newest first), with best-effort live status per order. |
+| `app/api/medicine/order/status/route.js` | `GET` | `/api/medicine/order/status?orderId=` | Single order status via `GET /go/api/v1/pharmacy/orders/{id}` (note the `/go` prefix — the plain `/api/v1/...` path 404s). |
 
 ---
 
@@ -225,7 +234,7 @@ All consultancy pages share the layout defined in `app/consultancy/layout.js`, w
 | `app/api/diagnostic/search/route.js` | `GET` | `/api/diagnostic/search?q=&zipcode=` | Search diagnostic test packages |
 | `app/api/diagnostic/slots/route.js` | `POST` | `/api/diagnostic/slots` | Get phlebotomist availability slots for a date + test list |
 | `app/api/diagnostic/book/route.js` | `POST` | `/api/diagnostic/book` | Book a lab test with selected slot and address |
-| `app/api/diagnostic/order/route.js` | `GET` | `/api/diagnostic/order/:orderId` | Get lab test order details |
+| `app/api/diagnostic/order/[orderId]/route.js` | `GET` | `/api/diagnostic/order/:orderId` | Get lab test order details |
 | `app/api/diagnostic/cancel/route.js` | `POST` | `/api/diagnostic/cancel` | Cancel a booked lab test order |
 | `app/api/diagnostic/reschedule/route.js` | `POST` | `/api/diagnostic/reschedule` | Reschedule a booked lab test order |
 
@@ -257,8 +266,10 @@ All consultancy pages share the layout defined in `app/consultancy/layout.js`, w
 | Route File | Method | Endpoint | Description |
 |------------|--------|----------|-------------|
 | `app/api/pincode/route.js` | `GET` | `/api/pincode?pincode=` | Pincode → city/state/lat/lon lookup (India Post + Nominatim) |
-| `app/api/pincode/route.js` | `GET` | `/api/pincode?lat=&lon=` | Reverse geocoding: coordinates → address + pincode |
-| `app/api/meradoc-proxy/route.js` | ALL | `/api/meradoc-proxy/*` | **Server-side CORS proxy** — forwards all MeraDoc API calls, injecting auth headers |
+| `app/api/pincode/route.js` | `GET` | `/api/pincode?lat=&lon=` | Reverse geocoding: coordinates → address + pincode (Nominatim) |
+| `app/api/token/route.js` | `POST` | `/api/token` | Mints the tenant JWT server-side (proxies the CORS-blocked `/sso/tenant`) |
+| `app/api/mera/[...path]/route.js` | ALL | `/api/mera/*` | **Active generic reverse proxy** — forwards all axios MeraDoc calls, injecting `x-api-id`/`x-api-token`/`originToken` and forwarding `Authorization` + `X-Idempotency-Key` |
+| `app/api/meradoc-proxy/[...path]/route.js` | ALL | `/api/meradoc-proxy/*` | Legacy generic proxy (no idempotency-key forwarding) |
 
 ---
 
@@ -349,3 +360,64 @@ npm start
 ```
 
 > **Default dev server:** [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 11. Critical Behaviors, API Contracts & Known Constraints (READ THIS)
+
+This section captures non-obvious rules that are **not visible from reading the code casually**. A new maintainer needs these to avoid re-discovering them the hard way.
+
+### 11.1 MeraDoc has no CORS — never call it from the browser
+See §2. Every MeraDoc call must go through a same-origin `/api/*` route. If you add a new MeraDoc feature, add a server route (or use `/api/mera/...`); do **not** `fetch("https://apidev.meradoc.com/...")` from a component — the browser blocks it and you'll see a misleading "provisional headers" failure.
+
+### 11.2 The tenant token is not a patient
+The JWT from `/sso/tenant` is `type: TENANT` (identifies client `PVMD-01`, not a person). So any **user-scoped** MeraDoc write must pass the patient explicitly. Two forms are used:
+
+- **Query param** — `address/create` and `address/update/:id` read `userId` from the **URL query string** (`?userId=<patientId>`), NOT the body. Body-only → `400 "User Id is required"`. (`app/api/meradoc/address/route.js`.)
+- **Body field** — the pharmacy order requires `patientId` in the JSON body (see §11.3).
+
+If a MeraDoc endpoint returns "User Id is required" / "patientId is required", try passing it as a **query param** first, then as a body field.
+
+### 11.3 Medicine order contract (`POST /go/api/v1/pharmacy/orders`)
+MeraDoc validates the body in stages — each missing field is a fresh `400`. A valid order needs **all** of:
+
+1. `patientId` in the body (resolved server-side from `meradoc_patients` by email, or `x-patient-id` header).
+2. `items[].name` on every item (the cart must send `i.product.name`).
+3. `items[].productId` = the product's **search `productId`** (e.g. NICIP PLUS = `6216`), **not** its `ucode` (`122665`) and not a stale id → otherwise `Medicine "<name>" was not found`.
+4. Order total **≥ ₹300** → else `Minimum order amount should be 300`.
+
+On success the route persists the order into `medicine_orders` so it appears in **Profile → Medicine Orders**.
+
+### 11.4 Medicine order status is effectively always `PENDING` on dev
+Orders are created in MeraDoc as `PENDING`, but the PharmEasy provider (`PEMD-01`) does not create the partner order on the dev environment (`partnerOrderId` comes back empty). Three consequences, all dead on dev:
+- Provider never fulfils → status stays `PENDING`.
+- The live lookup `GET /go/api/v1/pharmacy/orders/{mongoId}` returns `"Order Not Found"` even for a just-placed order.
+- There is **no medicine-order status webhook** (only lab-test / appointment / prescription webhooks exist).
+So `/api/medicine/orders` always falls back to the stored status. In production (working provider) the live-status path lights up automatically.
+
+### 11.5 Medicine availability — "provider unavailable" ≠ out of stock
+`/drugs/availability` genuinely fails (HTTP 502 `provider unavailable`) for many products even though search lists them `IN_STOCK`. The route therefore treats any ucode it **couldn't verify** as **available/orderable** (with a `providerUnavailable: true` flag) rather than blocking the user; only an explicit `availability:false` from MeraDoc marks a product unavailable. The response deliberately does **not** forward MeraDoc's raw 502 body.
+
+### 11.6 Address / geocoding fragility
+- `POST /api/meradoc/address` requires **non-empty `district`, `city`, and `mobileNumber`**. `district`/`city` fall back `city → district → state → "N/A"` because geocoding can return an empty city. `mobileNumber` comes from `userPhone`.
+- The pincode lookup (`/api/pincode`) uses **India Post first, Nominatim as fallback**. India Post is flaky; when it's down the Nominatim fallback derives the city from `state_district` / `city_district` / `municipality`. Both are external, unauthenticated APIs.
+
+### 11.7 Per-user data isolation (localStorage)
+Auth state lives in `localStorage`. The address is stored **per email** (`ltLocation_<email>`) and server-side (`user_lt_locations`, via `/api/lab-test-address`). On every login/registration, **`lib/session.js` → `activateUser(email)`** runs: it clears the global/leaky keys (`ltCart`, legacy `ltLocation`, `ltDeliveryCity`) so a new user can't inherit the previous user's cart/city, then re-hydrates `ltLocation_<email>` from the server. The nav header derives the "Deliver to" city from the **active user's** `ltLocation_<email>`, never a shared key. Logout ([profile] handler and the dashboard sidebar button) clears auth + per-user keys and routes to `/login`.
+
+### 11.9 Dev-only double requests (React StrictMode)
+In `npm run dev`, Next.js enables React StrictMode, which **double-invokes effects** — so mount-effect `fetch`es (e.g. the cart page's users/patient/lab-test-address loads) fire **twice**. This is dev-only; a production build runs them once. It is not a bug. (Migrating those raw `fetch`es to the already-configured TanStack Query would dedupe them if desired.)
+
+### 11.10 Key localStorage keys
+
+| Key | Scope | Purpose |
+|-----|-------|---------|
+| `accessToken` | global | Tenant JWT (Bearer) |
+| `userEmail` / `userName` / `userPhone` / `userCountry` / `userGender` | global | Session identity |
+| `meradocPatientId_<email>` | per-user | MeraDoc patient id |
+| `meradocAppointmentId_<email>` | per-user | Active appointment id |
+| `ltLocation_<email>` | per-user | Saved delivery address (mirrors `user_lt_locations`) |
+| `ltCart` / `medCart` | global | Lab-test / medicine carts (cleared on user switch) |
+| `medOrders_<email>` / `ltPendingOrders_<email>` | per-user | Optimistic order caches |
+
+> Legacy global keys `ltLocation` and `ltDeliveryCity` are deprecated and cleared on login; do not reintroduce reads of them.

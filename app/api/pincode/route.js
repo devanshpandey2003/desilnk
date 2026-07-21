@@ -16,7 +16,7 @@ export async function GET(request) {
       const data = await res.json();
       const addr = data?.address || {};
       return NextResponse.json({
-        city:        addr.city || addr.town || addr.village || addr.county || addr.district || "",
+        city:        addr.city || addr.town || addr.village || addr.municipality || addr.city_district || addr.state_district || addr.county || addr.district || addr.suburb || "",
         state:       addr.state || "",
         pincode:     addr.postcode || "",
         addressText: data.display_name || "",
@@ -61,7 +61,7 @@ export async function GET(request) {
       const rData = await rRes.json();
       const addr  = rData?.address || {};
       return NextResponse.json({
-        city:  addr.city || addr.town || addr.village || addr.county || "",
+        city:  addr.city || addr.town || addr.village || addr.municipality || addr.city_district || addr.state_district || addr.county || addr.suburb || "",
         state: addr.state || "",
         pincode,
         lat:   parseFloat(item.lat),

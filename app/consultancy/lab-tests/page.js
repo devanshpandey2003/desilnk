@@ -689,7 +689,6 @@ export default function LabTestsPage() {
         // Save refreshed address back to DB + per-email localStorage
         if (email) {
           localStorage.setItem(`ltLocation_${email}`, JSON.stringify(updated));
-          localStorage.setItem("ltDeliveryCity", updated.city || "");
           fetch("/api/lab-test-address", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
